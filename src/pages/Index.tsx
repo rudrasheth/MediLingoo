@@ -62,6 +62,13 @@ const IndexContent = () => {
     setCurrentView("prescription-chatbot");
   };
 
+  const handleFileSelected = (file: File) => {
+    // Store file temporarily to be processed in PhotoUpload
+    sessionStorage.setItem('selectedFile', file.name);
+    // Directly call handleUpload with the selected file
+    handleUpload(file);
+  };
+
   const handleUpload = async (file: File) => {
     setIsProcessing(true);
     setDecipherText(null);
@@ -167,7 +174,7 @@ const IndexContent = () => {
       
       <div className="min-h-screen bg-background">
         <GlassNav />
-        <HeroSection onScanClick={handleScanClick} />
+        <HeroSection onScanClick={handleScanClick} onFileSelected={handleFileSelected} />
         
         {currentView === "upload" && (
           <PhotoUpload 

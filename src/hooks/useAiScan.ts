@@ -50,27 +50,45 @@ export const useAiScan = () => {
     setProgress(0);
     
     try {
-      // Use Tesseract.js for OCR with better configuration
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please upload an image file (JPEG, PNG, etc.)');
+      }
+
+      // Use Tesseract.js for free OCR with comprehensive configuration
       const result = await Tesseract.recognize(
         file,
-        'eng', // You can add more languages: 'eng+hin+mar' for multilingual support
+        // Support multiple languages for better accuracy
+        // 'eng+hin+mar' for English, Hindi, and Marathi
+        // You can customize based on your needs
+        'eng',
         {
           logger: (m) => {
+            // Update progress during OCR processing
             if (m.status === 'recognizing text') {
               setProgress(Math.round(m.progress * 100));
+            } else if (m.status === 'initializing api') {
+              setProgress(10);
+            } else if (m.status === 'loading language traineddata') {
+              setProgress(25);
             }
           },
           // Improve accuracy with these settings
           tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+          tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
         }
       );
 
-      const extractedText = result.data.text;
+      const extractedText = result.data.text.trim();
       
-      if (!extractedText || extractedText.trim().length < 5) {
-        throw new Error('No text detected in the image. Please upload a clearer prescription.');
+      if (!extractedText || extractedText.length < 5) {
+        throw new Error('No text detected in the image. Please upload a clearer prescription image.');
       }
 
+      // Confidence score check
+      const confidence = result.data.confidence;
+      console.log('OCR Confidence:', confidence);
+      
       // Parse medicine information from the text (optional, for future use)
       const medicines = parseMedicines(extractedText);
       console.log('Parsed medicines:', medicines);
@@ -78,8 +96,8 @@ export const useAiScan = () => {
       return extractedText;
     } catch (e: any) {
       console.error('OCR Error:', e);
-      const fallback = 'Could not scan prescription. Please try again with a clearer image.';
-      setError(e?.message || 'Failed to scan');
+      const fallback = 'Could not scan prescription. Please try again with a clearer image or check your internet connection.';
+      setError(e?.message || 'Failed to scan prescription');
       return fallback;
     } finally {
       setLoading(false);

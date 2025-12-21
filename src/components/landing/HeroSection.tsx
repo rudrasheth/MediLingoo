@@ -1,23 +1,97 @@
-import { Camera, Sparkles, Type } from "lucide-react";
+import { Camera, Sparkles, MessageCircle, Upload, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
 import PrescriptionCard from "./PrescriptionCard";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import Chatbot from "@/components/chatbot/Chatbot";
 
 interface HeroSectionProps {
   onScanClick: () => void;
+  onFileSelected?: (file: File) => void;
 }
 
-const HeroSection = ({ onScanClick }: HeroSectionProps) => {
+const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
   const { t } = useLanguage();
-  const [prescriptionText, setPrescriptionText] = useState("");
+  const [showScanOptions, setShowScanOptions] = useState(false);
+  const [showChatbot, setShowChatbot] = useState(false);
+  const [chatInitialMessage, setChatInitialMessage] = useState<string | null>(null);
 
-  const handleScan = () => {
-    // Store the text in sessionStorage so dashboard can access it
-    if (prescriptionText.trim()) {
-      sessionStorage.setItem('manualPrescriptionText', prescriptionText);
+  const handleScanClick = () => {
+    setShowScanOptions(true);
+  };
+
+  const handleCameraClick = () => {
+    setShowScanOptions(false);
+    // Trigger camera capture
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        // Pass the file to the parent component for OCR processing
+        onFileSelected?.(file);
+        onScanClick();
+      }
+    };
+    input.click();
+  };
+
+  const handleGalleryClick = () => {
+    setShowScanOptions(false);
+    // Trigger gallery upload
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        // Pass the file to the parent component for OCR processing
+        onFileSelected?.(file);
+        onScanClick();
+      }
+    };
+    input.click();
+  };
+
+  const handleChat = () => {
+    setChatInitialMessage(null);
+    setShowChatbot(true);
+  };
+
+  const handleAIRecognition = () => {
+    setChatInitialMessage(null);
+    setShowChatbot(true);
+  };
+
+  const handlePharmacyFinder = () => {
+    // Request location permission
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setChatInitialMessage(`Find pharmacies near my location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+          setShowChatbot(true);
+        },
+        (error) => {
+          // Handle error - still open chatbot with general pharmacy request
+          setChatInitialMessage('Find nearby pharmacies');
+          setShowChatbot(true);
+        }
+      );
+    } else {
+      // Geolocation not supported
+      setChatInitialMessage('Find nearby pharmacies');
+      setShowChatbot(true);
     }
-    onScanClick();
   };
 
   return (
@@ -56,11 +130,17 @@ const HeroSection = ({ onScanClick }: HeroSectionProps) => {
         {/* Features Pills */}
         <div className="flex flex-wrap justify-center gap-2 mb-12 fade-up" style={{ animationDelay: "0.25s" }}>
           {[
-            { icon: "📷", text: "Instant Scan" },
-            { icon: "🔍", text: "AI Recognition" },
-            { icon: "🏥", text: "Pharmacy Finder" }
+            { icon: "📷", text: "Instant Scan", clickable: true, handler: handleScanClick },
+            { icon: "🔍", text: "AI Recognition", clickable: true, handler: handleAIRecognition },
+            { icon: "🏥", text: "Pharmacy Finder", clickable: true, handler: handlePharmacyFinder }
           ].map((feature, i) => (
-            <div key={i} className="px-3 py-1.5 rounded-lg bg-white/5 border border-primary/20 backdrop-blur-sm text-xs md:text-sm text-secondary hover:border-primary/40 transition-all">
+            <div 
+              key={i} 
+              onClick={feature.clickable ? feature.handler : undefined}
+              className={`px-3 py-1.5 rounded-lg bg-white/5 border border-primary/20 backdrop-blur-sm text-xs md:text-sm text-secondary hover:border-primary/40 transition-all ${
+                feature.clickable ? 'cursor-pointer hover:bg-primary/10 hover:scale-105' : ''
+              }`}
+            >
               <span className="mr-1">{feature.icon}</span>{feature.text}
             </div>
           ))}
@@ -80,42 +160,78 @@ const HeroSection = ({ onScanClick }: HeroSectionProps) => {
       {/* Bottom CTA Sheet - Fixed Position */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background/95 to-transparent pt-12 z-40">
         <div className="card-glow p-5 space-y-3 max-w-md mx-auto rounded-2xl border border-primary/30">
-          {/* Text Input Option */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-              <Type className="w-4 h-4" />
-              Write prescription details:
-            </label>
-            <textarea 
-              value={prescriptionText}
-              onChange={(e) => setPrescriptionText(e.target.value)}
-              placeholder="e.g., Aspirin 500mg, 2x daily..."
-              className="w-full h-20 p-2 rounded-lg border border-input bg-background text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-            />
+          {/* Two Main Options */}
+          <div className="grid grid-cols-1 gap-3">
+            {/* Scan Prescription Button */}
+            <Button 
+              onClick={handleScanClick}
+              className="w-full h-14 bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+            >
+              <Camera className="w-5 h-5 mr-2" />
+              Scan Prescription
+            </Button>
+
+            {/* Chat with Me Button */}
+            <Button 
+              onClick={handleChat}
+              variant="outline"
+              className="w-full h-14 border-2 border-primary hover:bg-primary/10 font-semibold rounded-xl transition-all"
+            >
+              <MessageCircle className="w-5 h-5 mr-2" />
+              Chat with me
+            </Button>
           </div>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="px-2 bg-background text-muted-foreground">or</span>
-            </div>
-          </div>
-
-          {/* Scan Button */}
-          <Button 
-            onClick={handleScan}
-            className="w-full h-12 bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
-          >
-            <Camera className="w-5 h-5 mr-2" />
-            {t.hero.scanButton}
-          </Button>
           <p className="text-center text-xs text-muted-foreground">
             {t.hero.noAccount}
           </p>
         </div>
       </div>
+
+      {/* Scan Options Dialog */}
+      <Dialog open={showScanOptions} onOpenChange={setShowScanOptions}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Scan Prescription</DialogTitle>
+            <DialogDescription>
+              Choose how you'd like to upload your prescription
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 gap-3 mt-4">
+            <Button
+              onClick={handleCameraClick}
+              className="w-full h-16 bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-600 text-white font-semibold rounded-xl"
+            >
+              <Video className="w-6 h-6 mr-3" />
+              <div className="text-left">
+                <div className="font-semibold">Use Camera</div>
+                <div className="text-xs opacity-90">Take a photo now</div>
+              </div>
+            </Button>
+            <Button
+              onClick={handleGalleryClick}
+              variant="outline"
+              className="w-full h-16 border-2 border-primary hover:bg-primary/10 font-semibold rounded-xl"
+            >
+              <Upload className="w-6 h-6 mr-3" />
+              <div className="text-left">
+                <div className="font-semibold">Upload from Gallery</div>
+                <div className="text-xs opacity-75">Choose existing photo</div>
+              </div>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Chatbot Modal */}
+      <Chatbot 
+        isOpen={showChatbot} 
+        onClose={() => {
+          setShowChatbot(false);
+          setChatInitialMessage(null);
+        }} 
+        initialMessage={chatInitialMessage}
+      />
     </section>
   );
 };
