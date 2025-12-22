@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet";
 import GlassNav from "@/components/layout/GlassNav";
 import HeroSection from "@/components/landing/HeroSection";
 import DashboardView from "@/components/dashboard/DashboardView";
-import PrescriptionChatbotPage from "@/components/PrescriptionChatbotPage";
+import SimplePrescriptionPage from "@/components/SimplePrescriptionPage";
 import PhotoUpload from "@/components/upload/PhotoUpload";
 import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 import { PlanProvider, usePlan } from "@/contexts/PlanContext";
@@ -108,7 +108,7 @@ const IndexContent = () => {
 
       recordScan();
       setIsProcessing(false);
-      setCurrentView("dashboard");
+      setCurrentView("prescription-chatbot");
     } catch (e) {
       setIsProcessing(false);
       toast({ title: "Upload failed", description: "Please try again.", variant: "destructive" });
@@ -128,12 +128,14 @@ const IndexContent = () => {
           <title>Prescription & Medicine Assistant | MediLingo</title>
           <meta name="description" content="Upload prescription and chat with medicine assistant." />
         </Helmet>
-        <PrescriptionChatbotPage
+        <SimplePrescriptionPage
           onBack={() => {
             setCurrentView("landing");
             setPrescriptionImage(null);
             setDecipherText(null);
           }}
+          prescriptionText={decipherText}
+          prescriptionImage={prescriptionImage}
         />
       </>
     );
