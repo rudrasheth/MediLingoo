@@ -22,9 +22,10 @@ const IndexContent = () => {
   const { plan, canUseScan, recordScan, usage } = usePlan();
   const { scan, progress } = useAiScan();
 
-  // Allow scroll for all views
+  // Control scroll: disable on landing, enable elsewhere
   useEffect(() => {
-    document.body.style.overflow = "auto";
+    const shouldHideScroll = currentView === "landing";
+    document.body.style.overflow = shouldHideScroll ? "hidden" : "auto";
     return () => {
       document.body.style.overflow = "auto";
     };
@@ -35,8 +36,10 @@ const IndexContent = () => {
       toast({
         title: "Scan limit reached",
         description:
-          plan === "free"
-            ? `Free tier allows 5 deciphers/month. Used: ${usage.scansThisMonth}. Upgrade for unlimited.`
+          plan === "standard"
+            ? `Standard plan allows 5 scans/month. Used: ${usage.scansThisMonth}. Upgrade for more.`
+            : plan === "premium"
+            ? `Premium plan allows 50 scans/month. Used: ${usage.scansThisMonth}. Upgrade to Pro for unlimited.`
             : "You have reached a temporary limit.",
         variant: "destructive",
       });
@@ -128,15 +131,18 @@ const IndexContent = () => {
           <title>Prescription & Medicine Assistant | MediLingo</title>
           <meta name="description" content="Upload prescription and chat with medicine assistant." />
         </Helmet>
-        <SimplePrescriptionPage
-          onBack={() => {
-            setCurrentView("landing");
-            setPrescriptionImage(null);
-            setDecipherText(null);
-          }}
-          prescriptionText={decipherText}
-          prescriptionImage={prescriptionImage}
-        />
+        <div className="min-h-screen bg-background pt-16">
+          <GlassNav />
+          <SimplePrescriptionPage
+            onBack={() => {
+              setCurrentView("landing");
+              setPrescriptionImage(null);
+              setDecipherText(null);
+            }}
+            prescriptionText={decipherText}
+            prescriptionImage={prescriptionImage}
+          />
+        </div>
       </>
     );
   }
@@ -169,7 +175,7 @@ const IndexContent = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </Helmet>
       
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-16">
         <GlassNav />
         <HeroSection onScanClick={handleScanClick} onFileSelected={handleFileSelected} />
         

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 
-type Plan = 'free' | 'premium';
+type Plan = 'standard' | 'premium' | 'pro';
 
 interface UsageState {
   scansThisMonth: number;
@@ -33,7 +33,8 @@ const DEFAULT_USAGE: UsageState = {
 export const PlanProvider = ({ children }: { children: ReactNode }) => {
   const [plan, setPlanState] = useState<Plan>(() => {
     const saved = localStorage.getItem('medilingo_plan_tier');
-    return saved === 'premium' ? 'premium' : 'free';
+    if (saved === 'premium' || saved === 'pro') return saved as Plan;
+    return 'standard';
   });
   const [usage, setUsage] = useState<UsageState>(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -60,11 +61,18 @@ export const PlanProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('medilingo_plan_tier', p);
   };
 
-  const freeScanLimit = 5;
+  const getScanLimit = () => {
+    switch (plan) {
+      case 'standard': return 5;
+      case 'premium': return 50;
+      case 'pro': return Infinity;
+      default: return 5;
+    }
+  };
 
   const canUseScan = () => {
-    if (plan === 'premium') return true;
-    return usage.scansThisMonth < freeScanLimit;
+    const limit = getScanLimit();
+    return limit === Infinity || usage.scansThisMonth < limit;
   };
 
   const recordScan = () => {
@@ -75,7 +83,14 @@ export const PlanProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const maxLanguages = useMemo(() => (plan === 'premium' ? 4 : 2), [plan]);
+  const maxLanguages = useMemo(() => {
+    switch (plan) {
+      case 'standard': return 2;
+      case 'premium': return 5;
+      case 'pro': return 10;
+      default: return 2;
+    }
+  }, [plan]);
 
   const value: PlanContextType = {
     plan,
