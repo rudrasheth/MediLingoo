@@ -14,6 +14,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, age: number, name: string) => Promise<void>;
   logout: () => void;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string, otp: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -129,8 +131,76 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const forgotPassword = async (email: string) => {
+    try {
+      console.log('🔑 Requesting password reset for:', email);
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send reset email');
+      }
+
+      const data = await response.json();
+      console.log('✅ Reset email sent:', data.message);
+      toast({
+        title: 'Reset email sent',
+        description: 'Check your email for OTP and instructions',
+      });
+    } catch (error: any) {
+      console.error('❌ Forgot password error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to process password reset',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email: string, otp: string, newPassword: string) => {
+    try {
+      console.log('🔄 Resetting password for:', email);
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, otp, newPassword }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reset password');
+      }
+
+      const data = await response.json();
+      console.log('✅ Password reset successful:', data.message);
+      toast({
+        title: 'Password reset successfully',
+        description: 'You can now login with your new password',
+      });
+    } catch (error: any) {
+      console.error('❌ Reset password error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to reset password',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, signup, logout, forgotPassword, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

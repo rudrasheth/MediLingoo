@@ -17,7 +17,7 @@ import { usePlan } from "@/contexts/PlanContext";
 
 const GlassNav = () => {
   const { t } = useLanguage();
-  const { isAuthenticated, login, logout, signup } = useAuth();
+  const { isAuthenticated, login, logout, signup, forgotPassword, resetPassword } = useAuth();
   const { plan, setPlan } = usePlan();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,6 +28,15 @@ const GlassNav = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSignupMode, setIsSignupMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Forgot password states
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<"email" | "otp" | "reset">("email");
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +105,79 @@ const GlassNav = () => {
     setConfirmPassword("");
     setFirstName("");
     setLastName("");
+  };
+
+  const handleForgotPasswordRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!forgotPasswordEmail.trim()) {
+      alert("Please enter your email address");
+      return;
+    }
+
+    setForgotPasswordLoading(true);
+    try {
+      await forgotPassword(forgotPasswordEmail);
+      setForgotPasswordStep("otp");
+    } catch (error) {
+      console.error("Forgot password request failed:", error);
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!otp.trim()) {
+      alert("Please enter the OTP from your email");
+      return;
+    }
+
+    if (!newPassword.trim() || !confirmNewPassword.trim()) {
+      alert("Please enter your new password");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      alert("Passwords don't match!");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+
+    setForgotPasswordLoading(true);
+    try {
+      await resetPassword(forgotPasswordEmail, otp, newPassword);
+      // Reset forgot password state and close dialog
+      setIsForgotPasswordOpen(false);
+      setForgotPasswordStep("email");
+      setForgotPasswordEmail("");
+      setOtp("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (error) {
+      console.error("Password reset failed:", error);
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+
+  const closeForgotPasswordDialog = () => {
+    setIsForgotPasswordOpen(false);
+    setForgotPasswordStep("email");
+    setForgotPasswordEmail("");
+    setOtp("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+  };
+
+  const openForgotPassword = () => {
+    setIsOpen(false);
+    setIsForgotPasswordOpen(true);
   };
 
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -301,20 +383,133 @@ const GlassNav = () => {
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Processing..." : (isSignupMode ? "Create Account" : "Login")}
                   </Button>
-                  <div className="text-center">
-                    <Button
-                      type="button"
-                      variant="link"
-                      onClick={toggleMode}
-                      className="text-sm"
-                    >
-                      {isSignupMode ? "Already have an account? Login" : "New user? Sign up"}
-                    </Button>
+                  <div className="text-center space-y-2">
+                    <div>
+                      <Button
+                        type="button"
+                        variant="link"
+                        onClick={toggleMode}
+                        className="text-sm"
+                      >
+                        {isSignupMode ? "Already have an account? Login" : "New user? Sign up"}
+                      </Button>
+                    </div>
+                    {!isSignupMode && (
+                      <div>
+                        <Button
+                          type="button"
+                          variant="link"
+                          onClick={openForgotPassword}
+                          className="text-sm text-red-600 hover:text-red-700"
+                        >
+                          Forgot your password?
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </form>
               </DialogContent>
             </Dialog>
           )}
+
+          {/* Forgot Password Dialog */}
+          <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Reset Your Password</DialogTitle>
+                <DialogDescription>
+                  {forgotPasswordStep === "email" && "Enter your email address to receive a password reset code"}
+                  {forgotPasswordStep === "otp" && "Enter the OTP code sent to your email and set a new password"}
+                </DialogDescription>
+              </DialogHeader>
+
+              {forgotPasswordStep === "email" && (
+                <form onSubmit={handleForgotPasswordRequest} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgotEmail">Email Address</Label>
+                    <Input
+                      id="forgotEmail"
+                      type="email"
+                      placeholder="Enter your email address"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      required
+                      disabled={forgotPasswordLoading}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={forgotPasswordLoading}>
+                    {forgotPasswordLoading ? "Sending..." : "Send Reset Code"}
+                  </Button>
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={closeForgotPasswordDialog}
+                      className="text-sm"
+                    >
+                      Back to Login
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {forgotPasswordStep === "otp" && (
+                <form onSubmit={handleResetPasswordSubmit} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="otp">OTP Code</Label>
+                    <Input
+                      id="otp"
+                      type="text"
+                      placeholder="Enter 6-digit code from your email"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      maxLength={6}
+                      required
+                      disabled={forgotPasswordLoading}
+                    />
+                    <p className="text-xs text-gray-500">Check your email for the 6-digit code (valid for 10 minutes)</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      placeholder="Enter new password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      disabled={forgotPasswordLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmNewPassword">Confirm Password</Label>
+                    <Input
+                      id="confirmNewPassword"
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      required
+                      disabled={forgotPasswordLoading}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={forgotPasswordLoading}>
+                    {forgotPasswordLoading ? "Resetting..." : "Reset Password"}
+                  </Button>
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={closeForgotPasswordDialog}
+                      className="text-sm"
+                    >
+                      Back to Login
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Upgrade Button */}
           <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
