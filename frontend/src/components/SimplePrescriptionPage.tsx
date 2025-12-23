@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, Clock, Plus, Trash2, ChevronUp, FileText, Download, Share2, MessageCircle, Brain } from 'lucide-react';
+import { ArrowLeft, Bell, Clock, Plus, Trash2, ChevronUp, FileText, Download, Share2, MessageCircle, Brain, X, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMedicineHistory } from '@/contexts/MedicineHistoryContext';
 import { toast } from '@/components/ui/use-toast';
@@ -25,6 +25,7 @@ const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }:
   const [whatsappPhone, setWhatsappPhone] = useState('');
   const [reminders, setReminders] = useState<any[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [activeAlarm, setActiveAlarm] = useState<any>(null);
   
   // Reminder form state
   const [reminderForm, setReminderForm] = useState({
@@ -33,6 +34,41 @@ const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }:
     times: ['08:00'],
     notes: '',
   });
+
+  // Check for active alarms every minute
+  useEffect(() => {
+    const checkAlarms = () => {
+      const now = new Date();
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      const activeReminders = reminderService.getTodayReminders();
+      for (const reminder of activeReminders) {
+        if (reminder.times.includes(currentTime) && !activeAlarm) {
+          setActiveAlarm(reminder);
+          // Play alarm sound (you can add audio here)
+          break;
+        }
+      }
+    };
+
+    const interval = setInterval(checkAlarms, 60000); // Check every minute
+    checkAlarms(); // Check immediately on mount
+    
+    return () => clearInterval(interval);
+  }, [activeAlarm]);
+
+  const dismissAlarm = () => {
+    setActiveAlarm(null);
+  };
+
+  const snoozeAlarm = () => {
+    // Snooze for 5 minutes
+    toast({
+      title: "Alarm Snoozed",
+      description: "Reminder will ring again in 5 minutes",
+    });
+    setActiveAlarm(null);
+  };
 
   // Handle scroll to show/hide scroll-to-top button
   useEffect(() => {
@@ -231,7 +267,7 @@ const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }:
         <div className="absolute bottom-32 right-10 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-pulse delay-700"></div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 max-w-6xl relative z-10">
+      <div className="w-full px-0 md:px-2 py-6 relative z-10">
         {/* Header with premium styling */}
         <div className="flex items-center justify-between mb-8 fade-up">
           <div className="flex items-center gap-4">
@@ -521,6 +557,55 @@ const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }:
           >
             <ChevronUp className="w-5 h-5" />
           </Button>
+        )}
+
+        {/* Alarm Notification UI */}
+        {activeAlarm && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 animate-pulse">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-6 rounded-t-2xl text-white text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="bg-white/20 rounded-full p-4 animate-bounce">
+                    <Volume2 className="w-8 h-8" />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Medicine Reminder!</h2>
+                <p className="text-lg opacity-90">Time to take your medicine</p>
+              </div>
+              
+              <div className="p-6 text-center">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    💊 {activeAlarm.medicineName}
+                  </h3>
+                  <p className="text-lg text-gray-600 mb-2">
+                    Dosage: {activeAlarm.dosage}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {activeAlarm.notes && `Note: ${activeAlarm.notes}`}
+                  </p>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button
+                    onClick={snoozeAlarm}
+                    variant="outline"
+                    className="flex-1 py-3 text-lg border-green-300 text-green-700 hover:bg-green-50"
+                  >
+                    <Clock className="w-5 h-5 mr-2" />
+                    Snooze 5min
+                  </Button>
+                  <Button
+                    onClick={dismissAlarm}
+                    className="flex-1 py-3 text-lg bg-green-600 hover:bg-green-700"
+                  >
+                    <X className="w-5 h-5 mr-2" />
+                    Taken
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

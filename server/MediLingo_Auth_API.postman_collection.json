@@ -1,0 +1,140 @@
+{
+  "info": {
+    "_postman_id": "medilingo-auth-api",
+    "name": "MediLingo Authentication API",
+    "description": "Complete authentication API testing collection for MediLingo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. SIGNUP - Create New User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser@gmail.com\",\n  \"password\": \"password123\",\n  \"age\": 28,\n  \"name\": \"Test User\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5001/api/auth/signup",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5001",
+          "path": ["api", "auth", "signup"]
+        }
+      }
+    },
+    {
+      "name": "2. LOGIN - Authenticate User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser@gmail.com\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5001/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5001",
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "3. GET PROFILE - Get User Info (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5001/api/auth/profile",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5001",
+          "path": ["api", "auth", "profile"]
+        }
+      }
+    },
+    {
+      "name": "4. FORGOT PASSWORD - Send OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser@gmail.com\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5001/api/auth/forgot-password",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5001",
+          "path": ["api", "auth", "forgot-password"]
+        }
+      }
+    },
+    {
+      "name": "5. RESET PASSWORD - Verify OTP & Update Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser@gmail.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5001/api/auth/reset-password",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5001",
+          "path": ["api", "auth", "reset-password"]
+        }
+      }
+    },
+    {
+      "name": "6. LOGOUT - Destroy Session (Protected)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5001/api/auth/logout",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5001",
+          "path": ["api", "auth", "logout"]
+        }
+      }
+    }
+  ]
+}

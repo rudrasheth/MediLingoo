@@ -36,4 +36,48 @@ if (!/^AIza/.test(GEMINI_API_KEY)) {
   console.warn('GEMINI_API_KEY does not look like a Google AI key (expected to start with AIza...).');
 }
 
-export { GEMINI_API_KEY, GEMINI_MODEL };
+// Authentication & Session Configuration
+const SESSION_SECRET = process.env.SESSION_SECRET;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Email Configuration for OTP
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
+const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || '587');
+
+// MongoDB URI
+const MONGODB_URI = process.env.MONGODB_URI;
+
+// Server Port
+const PORT = process.env.PORT || 5000;
+
+// Frontend URL for CORS
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+// Validation
+if (!SESSION_SECRET) {
+  throw new Error('SESSION_SECRET is not set in environment variables.');
+}
+
+if (!EMAIL_USER || !EMAIL_PASS) {
+  console.warn('⚠️  EMAIL_USER or EMAIL_PASS not set. Password reset functionality will not work.');
+}
+
+if (!MONGODB_URI) {
+  console.warn('⚠️  MONGODB_URI not set. Using default connection from db.ts');
+}
+
+export { 
+  GEMINI_API_KEY, 
+  GEMINI_MODEL,
+  SESSION_SECRET,
+  NODE_ENV,
+  EMAIL_USER,
+  EMAIL_PASS,
+  EMAIL_HOST,
+  EMAIL_PORT,
+  MONGODB_URI,
+  PORT,
+  FRONTEND_URL
+};
