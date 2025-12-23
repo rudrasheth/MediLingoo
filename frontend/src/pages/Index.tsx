@@ -10,6 +10,7 @@ import { PlanProvider, usePlan } from "@/contexts/PlanContext";
 import { MedicineHistoryProvider } from "@/contexts/MedicineHistoryContext";
 import { toast } from "@/components/ui/use-toast";
 import { useAiScan } from "@/hooks/useAiScan";
+import { useAuth } from "@/contexts/AuthContext";
 
 type View = "landing" | "upload" | "dashboard" | "prescription-chatbot";
 
@@ -21,6 +22,7 @@ const IndexContent = () => {
   const { t } = useLanguage();
   const { plan, canUseScan, recordScan, usage } = usePlan();
   const { scan, progress } = useAiScan();
+  const { isAuthenticated } = useAuth();
 
   // Control scroll: disable on landing, enable elsewhere
   useEffect(() => {
@@ -30,6 +32,18 @@ const IndexContent = () => {
       document.body.style.overflow = "auto";
     };
   }, [currentView]);
+
+  // Prevent unauthenticated users from staying on chatbot view
+  useEffect(() => {
+    if (currentView === "prescription-chatbot" && !isAuthenticated) {
+      toast({
+        title: "Login required",
+        description: "Please login to access the chatbot.",
+        variant: "destructive",
+      });
+      setCurrentView("landing");
+    }
+  }, [currentView, isAuthenticated]);
 
   const handleScanClick = () => {
     if (!canUseScan()) {
@@ -43,6 +57,18 @@ const IndexContent = () => {
             : "You have reached a temporary limit.",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Block chatbot access for logged-out users
+    if (!isAuthenticated) {
+      toast({
+        title: "Login required",
+        description: "Please login to use the chatbot experience.",
+        variant: "destructive",
+      });
+      // Keep them on landing/upload without entering chatbot flow
+      setCurrentView("landing");
       return;
     }
     
@@ -111,7 +137,18 @@ const IndexContent = () => {
 
       recordScan();
       setIsProcessing(false);
-      setCurrentView("prescription-chatbot");
+
+      // Only allow chatbot view if logged in
+      if (isAuthenticated) {
+        setCurrentView("prescription-chatbot");
+      } else {
+        toast({
+          title: "Login required",
+          description: "Please login to continue to the chatbot.",
+          variant: "destructive",
+        });
+        setCurrentView("landing");
+      }
     } catch (e) {
       setIsProcessing(false);
       toast({ title: "Upload failed", description: "Please try again.", variant: "destructive" });

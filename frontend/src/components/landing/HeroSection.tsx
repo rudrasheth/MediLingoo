@@ -12,6 +12,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Chatbot from "@/components/chatbot/Chatbot";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/use-toast";
 
 interface HeroSectionProps {
   onScanClick: () => void;
@@ -23,6 +25,19 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
   const [showScanOptions, setShowScanOptions] = useState(false);
   const [showChatbot, setShowChatbot] = useState(false);
   const [chatInitialMessage, setChatInitialMessage] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
+
+  const ensureLoggedIn = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login required",
+        description: "Please login to use the chatbot.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
 
   const handleScanClick = () => {
     setShowScanOptions(true);
@@ -64,11 +79,13 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
   };
 
   const handleChat = () => {
+    if (!ensureLoggedIn()) return;
     setChatInitialMessage(null);
     setShowChatbot(true);
   };
 
   const handleAIRecognition = () => {
+    if (!ensureLoggedIn()) return;
     setChatInitialMessage(null);
     setShowChatbot(true);
   };
@@ -78,11 +95,13 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          if (!ensureLoggedIn()) return;
           const { latitude, longitude } = position.coords;
           setChatInitialMessage(`Find pharmacies near my location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
           setShowChatbot(true);
         },
         (error) => {
+          if (!ensureLoggedIn()) return;
           // Handle error - still open chatbot with general pharmacy request
           setChatInitialMessage('Find nearby pharmacies');
           setShowChatbot(true);
@@ -90,6 +109,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
       );
     } else {
       // Geolocation not supported
+      if (!ensureLoggedIn()) return;
       setChatInitialMessage('Find nearby pharmacies');
       setShowChatbot(true);
     }
@@ -122,6 +142,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
         <div className="w-full max-w-2xl mx-auto mb-4 fade-up" style={{ animationDelay: "0.15s" }}>
           <div 
             onClick={() => {
+              if (!ensureLoggedIn()) return;
               setChatInitialMessage(null);
               setShowChatbot(true);
             }}
