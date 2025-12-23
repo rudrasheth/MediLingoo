@@ -107,11 +107,11 @@ export function HospitalFinder() {
           <div className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-emerald-600" />
             <h3 className="font-semibold text-gray-800">
-              Nearby Hospitals
+              {t.nav.nearbyHospitals}
             </h3>
           </div>
           <Button size="sm" onClick={findNearby} disabled={loading}>
-            {loading ? 'Finding…' : 'Find nearby (1.5km)'}
+            {loading ? 'Finding…' : `${t.common.findNearbyShort} ${t.common.within1_5km}`}
           </Button>
         </div>
         

@@ -1,5 +1,6 @@
 import { Camera, Upload, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PrescriptionUploadProps {
   onCameraClick: () => void;
@@ -7,14 +8,14 @@ interface PrescriptionUploadProps {
 }
 
 const PrescriptionUpload = ({ onCameraClick, onUploadClick }: PrescriptionUploadProps) => {
+  const { t } = useLanguage();
   return (
     <div className="text-center py-4 px-5 w-full relative">
       <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2" style={{ lineHeight: '1.5' }}>
-          Your Health, Deciphered
-        </h1>
-        <p className="max-w-2xl mx-auto text-gray-600 text-xs md:text-sm mb-5" style={{ lineHeight: '1.5' }}>
-        Transform handwritten prescriptions into clear, personalized medication
-        guidance in your language
+        {t.hero.headline}
+      </h1>
+      <p className="max-w-2xl mx-auto text-gray-600 text-xs md:text-sm mb-5" style={{ lineHeight: '1.5' }}>
+        {t.hero.subtitle}
       </p>
 
       <div className="relative max-w-xl w-full mx-auto p-6 rounded-3xl border-2 border-gray-100 bg-gradient-to-br from-white to-gray-50/50">
@@ -24,10 +25,10 @@ const PrescriptionUpload = ({ onCameraClick, onUploadClick }: PrescriptionUpload
         </div>
 
         <h3 className="text-2xl font-bold text-gray-900 mb-3" style={{ lineHeight: '1.5' }}>
-          Drop or Scan Prescription
+          {t.hero.dropOrScan}
         </h3>
         <p className="text-sm text-gray-600 mb-8 max-w-md mx-auto" style={{ lineHeight: '1.5' }}>
-          Take a photo of your prescription or upload an image file
+          {t.hero.uploadExplain}
         </p>
 
         {/* Buttons */}
@@ -38,7 +39,7 @@ const PrescriptionUpload = ({ onCameraClick, onUploadClick }: PrescriptionUpload
             className="border-2 border-primary text-primary hover:bg-primary hover:text-white hover:border-primary px-8 py-6 rounded-xl font-semibold gap-2 text-base shadow-sm transition-all"
           >
             <Camera className="w-5 h-5" />
-            Take Photo
+            {t.hero.takePhotoBtn}
           </Button>
           <Button
             onClick={onUploadClick}
@@ -46,7 +47,7 @@ const PrescriptionUpload = ({ onCameraClick, onUploadClick }: PrescriptionUpload
             className="border-2 border-primary text-primary hover:bg-primary hover:text-white hover:border-primary px-8 py-6 rounded-xl font-semibold gap-2 text-base shadow-sm transition-all"
           >
             <Upload className="w-5 h-5" />
-            Upload File
+            {t.hero.uploadFileBtn}
           </Button>
         </div>
       </div>

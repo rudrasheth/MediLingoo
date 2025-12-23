@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Camera, Upload, X, Image, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -15,6 +15,9 @@ const PhotoUpload = ({ onUpload, onCancel, isProcessing = false }: PhotoUploadPr
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
 
   const handleFile = useCallback((file: File) => {
     if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
@@ -52,6 +55,52 @@ const PhotoUpload = ({ onUpload, onCancel, isProcessing = false }: PhotoUploadPr
     const file = e.target.files?.[0];
     if (file) handleFile(file);
   }, [handleFile]);
+
+  const openLiveCamera = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        // Fallback to file input if API not available
+        cameraInputRef.current?.click();
+        return;
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      setMediaStream(stream);
+      setCameraOpen(true);
+    } catch (err) {
+      // Permission denied or no camera – fallback to file input
+      cameraInputRef.current?.click();
+    }
+  };
+
+  useEffect(() => {
+    if (cameraOpen && videoRef.current && mediaStream) {
+      videoRef.current.srcObject = mediaStream;
+      videoRef.current.play().catch(() => {});
+    }
+    return () => {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, [cameraOpen, mediaStream]);
+
+  const capturePhoto = async () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      setPreview(canvas.toDataURL('image/jpeg'));
+      setCameraOpen(false);
+      handleFile(file);
+    }, 'image/jpeg', 0.92);
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col slide-in-bottom">
@@ -125,7 +174,7 @@ const PhotoUpload = ({ onUpload, onCancel, isProcessing = false }: PhotoUploadPr
               <Button 
                 variant="touch" 
                 size="lg" 
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={openLiveCamera}
                 className="w-full"
               >
                 <Camera className="w-6 h-6" />
@@ -162,6 +211,26 @@ const PhotoUpload = ({ onUpload, onCancel, isProcessing = false }: PhotoUploadPr
           </>
         )}
       </div>
+
+      {/* Live Camera Overlay (desktop/laptop support) */}
+      {cameraOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center">
+          <div className="bg-background rounded-2xl p-4 w-full max-w-2xl shadow-elevated">
+            <div className="aspect-video bg-black rounded-xl overflow-hidden flex items-center justify-center">
+              <video ref={videoRef} className="w-full h-full object-contain" />
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <Button variant="outline" onClick={() => { setCameraOpen(false); }}>
+                {t.upload.cancel}
+              </Button>
+              <Button onClick={capturePhoto}>
+                <Camera className="w-4 h-4 mr-2" />
+                {t.upload.takePhoto}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="p-5 border-t border-border">

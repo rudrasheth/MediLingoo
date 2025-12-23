@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Bell, Clock, Plus, Trash2, ChevronUp, FileText, Download, Share2, MessageCircle, Brain, X, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMedicineHistory } from '@/contexts/MedicineHistoryContext';
@@ -31,6 +31,19 @@ const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }:
   const [reminders, setReminders] = useState<any[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeAlarm, setActiveAlarm] = useState<any>(null);
+  
+  // Refs for scrollable areas
+  const extractedRef = useRef<HTMLDivElement | null>(null);
+  const medsRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollAreaTop = (ref: React.RefObject<HTMLDivElement>) => {
+    ref.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const scrollAreaBottom = (ref: React.RefObject<HTMLDivElement>) => {
+    if (ref.current) {
+      ref.current.scrollTo({ top: ref.current.scrollHeight, behavior: 'smooth' });
+    }
+  };
   
   // Reminder form state
   const [reminderForm, setReminderForm] = useState({
@@ -331,27 +344,16 @@ const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }:
             </div>
           </div>
           
-          {/* Top Action Buttons with premium styling */}
+          {/* Top Action Buttons: only Reminder (Download/WhatsApp moved below) */}
           {prescriptionText && prescriptionText.trim() && !prescriptionText.includes('No text extracted') && !prescriptionText.includes('No clear text detected') && (
             <div className="flex items-center gap-3 fade-up" style={{ animationDelay: "0.2s" }}>
               <Button 
-                onClick={downloadTextAsFile} 
-                variant="outline" 
+                onClick={() => setShowReminderDialog(true)}
                 size="sm"
-                className="premium-shadow hover:scale-105 transition-all bg-white/80 backdrop-blur-sm border-primary/20 hover:border-primary/40"
+                className="premium-shadow hover:scale-105 transition-all"
               >
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
-              
-              <Button 
-                onClick={() => setShowWhatsAppDialog(true)} 
-                variant="outline" 
-                size="sm"
-                className="premium-shadow hover:scale-105 transition-all bg-green-50 hover:bg-green-100 text-green-700 border-green-200 hover:border-green-400"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                WhatsApp
+                <Plus className="w-4 h-4 mr-2" />
+                Add Reminder
               </Button>
             </div>
           )}
@@ -389,14 +391,46 @@ const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }:
                   <Brain className="w-5 h-5 text-primary" />
                   AI Extracted Text
                 </CardTitle>
+                {prescriptionText && (
+                  <div className="ml-auto flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => scrollAreaTop(extractedRef)}>
+                      Top
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => scrollAreaBottom(extractedRef)}>
+                      Bottom
+                    </Button>
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 {prescriptionText && prescriptionText.trim() && !prescriptionText.includes('No text extracted') && !prescriptionText.includes('No clear text detected') ? (
                   <>
-                    <div className="bg-gray-50 p-4 rounded-lg border" style={{ maxHeight: 'none', height: 'auto' }}>
+                    <div ref={extractedRef} className="bg-gray-50 p-4 rounded-lg border max-h-[320px] overflow-auto">
                       <pre className="text-sm whitespace-pre-wrap font-mono text-gray-800 leading-relaxed">
                         {prescriptionText}
                       </pre>
+                    </div>
+
+                    {/* Actions moved below */}
+                    <div className="mt-3 flex items-center gap-3">
+                      <Button 
+                        onClick={downloadTextAsFile} 
+                        variant="outline" 
+                        size="sm"
+                        className="premium-shadow bg-white/80 backdrop-blur-sm border-primary/20 hover:border-primary/40"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                      <Button 
+                        onClick={() => setShowWhatsAppDialog(true)} 
+                        variant="outline" 
+                        size="sm"
+                        className="premium-shadow bg-green-50 hover:bg-green-100 text-green-700 border-green-200 hover:border-green-400"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        WhatsApp
+                      </Button>
                     </div>
                   </>
                 ) : (
@@ -429,11 +463,15 @@ const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }:
             {/* Detected Medicines */}
             {medicines.length > 0 && (
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center">
                   <CardTitle className="text-lg">Detected Medicines</CardTitle>
+                  <div className="ml-auto flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => scrollAreaTop(medsRef)}>Top</Button>
+                    <Button variant="outline" size="sm" onClick={() => scrollAreaBottom(medsRef)}>Bottom</Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3" style={{ maxHeight: 'none' }}>
+                  <div ref={medsRef} className="space-y-3 max-h-[360px] overflow-auto pr-2">
                     {medicines.map((medicine) => (
                       <div key={medicine.id} className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
                         <h3 className="font-semibold text-blue-900">{medicine.name}</h3>
@@ -460,12 +498,6 @@ const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }:
               </CardHeader>
               <CardContent>
                 <Dialog open={showReminderDialog} onOpenChange={setShowReminderDialog}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full mb-4">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Reminder
-                    </Button>
-                  </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Add Medicine Reminder</DialogTitle>

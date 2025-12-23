@@ -11,8 +11,8 @@ import {
 
 const LanguageSwitcher = () => {
   const { language, setLanguage } = useLanguage();
-  const { maxLanguages } = usePlan();
-  const languages: Language[] = maxLanguages >= 3 ? ['en', 'hi', 'mr'] : ['en', 'hi'];
+  // Always expose four languages as requested
+  const languages: Language[] = ['en', 'hi', 'mr', 'bn'];
 
   return (
     <DropdownMenu>

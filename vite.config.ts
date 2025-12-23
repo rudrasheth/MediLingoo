@@ -10,7 +10,8 @@ export default defineConfig(({ mode }) => ({
     // Bind explicitly to localhost IPv4 to avoid IPv6 (::) issues on Windows
     host: "localhost",
     port: 5173,
-    strictPort: true,
+    // Allow Vite to fall back to the next free port if 5173 is busy
+    strictPort: false,
   },
   preview: {
     host: "localhost",

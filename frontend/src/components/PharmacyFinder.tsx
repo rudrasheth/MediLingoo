@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type Pharmacy = {
   id: string;
@@ -27,6 +28,7 @@ const PharmacyFinder = () => {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   const findNearby = async () => {
     setLoading(true);
@@ -94,10 +96,10 @@ const PharmacyFinder = () => {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <MapPin className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium text-muted-foreground">Nearby Pharmacies</span>
+          <span className="text-sm font-medium text-muted-foreground">{t.nav.nearbyPharmacies}</span>
         </div>
         <Button size="sm" onClick={findNearby} disabled={loading}>
-          {loading ? 'Finding…' : 'Find nearby (1.5km)'}
+          {loading ? 'Finding…' : `${t.common.findNearbyShort} ${t.common.within1_5km}`}
         </Button>
       </div>
       {error && <p className="text-xs text-destructive mb-2">{error}</p>}

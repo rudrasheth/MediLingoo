@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
 import PrescriptionCard from "./PrescriptionCard";
 import PrescriptionUpload from "./PrescriptionUpload";
+import CameraCapture from "@/components/CameraCapture";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
   const { t } = useLanguage();
   const [showScanOptions, setShowScanOptions] = useState(false);
   const [showChatbot, setShowChatbot] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   const [chatInitialMessage, setChatInitialMessage] = useState<string | null>(null);
 
   const handleScanClick = () => {
@@ -30,20 +32,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
 
   const handleCameraClick = () => {
     setShowScanOptions(false);
-    // Trigger camera capture
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        // Pass the file to the parent component for OCR processing
-        onFileSelected?.(file);
-        onScanClick();
-      }
-    };
-    input.click();
+    setShowCamera(true);
   };
 
   const handleGalleryClick = () => {
@@ -128,16 +117,16 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
             className="flex items-center gap-3 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg cursor-text hover:border-primary/40 transition-all"
           >
             <MessageCircle className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-400 text-sm">Ask me anything about your prescription...</span>
+            <span className="text-gray-400 text-sm">{t.hero.chatPlaceholder}</span>
           </div>
         </div>
 
         {/* Features Pills */}
         <div className="flex flex-wrap justify-center gap-2 fade-up mt-2 md:mt-3" style={{ animationDelay: "0.2s" }}>
           {[
-            { icon: "📷", text: "Instant Scan", clickable: true, handler: handleScanClick },
-            { icon: "🔍", text: "AI Recognition", clickable: true, handler: handleAIRecognition },
-            { icon: "🏥", text: "Pharmacy Finder", clickable: true, handler: handlePharmacyFinder }
+            { icon: "📷", text: t.hero.instantScan, clickable: true, handler: handleScanClick },
+            { icon: "🔍", text: t.hero.aiRecognition, clickable: true, handler: handleAIRecognition },
+            { icon: "💊", text: t.hero.pharmacyFinder, clickable: true, handler: handlePharmacyFinder },
           ].map((feature, i) => (
             <div 
               key={i} 
@@ -156,9 +145,9 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
       <Dialog open={showScanOptions} onOpenChange={setShowScanOptions}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Scan Prescription</DialogTitle>
+            <DialogTitle>{t.hero.scanButton}</DialogTitle>
             <DialogDescription>
-              Choose how you'd like to upload your prescription
+              {t.common.chooseUploadMethod}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 gap-3 mt-4">
@@ -168,8 +157,8 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
             >
               <Video className="w-6 h-6 mr-3" />
               <div className="text-left">
-                <div className="font-semibold">Use Camera</div>
-                <div className="text-xs opacity-90">Take a photo now</div>
+                <div className="font-semibold">{t.common.useCamera}</div>
+                <div className="text-xs opacity-90">{t.hero.takePhotoBtn}</div>
               </div>
             </Button>
             <Button
@@ -179,8 +168,8 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
             >
               <Upload className="w-6 h-6 mr-3" />
               <div className="text-left">
-                <div className="font-semibold">Upload from Gallery</div>
-                <div className="text-xs opacity-75">Choose existing photo</div>
+                <div className="font-semibold">{t.common.uploadFromGallery}</div>
+                <div className="text-xs opacity-75">{t.hero.uploadFileBtn}</div>
               </div>
             </Button>
           </div>
@@ -195,6 +184,16 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
           setChatInitialMessage(null);
         }} 
         initialMessage={chatInitialMessage}
+      />
+
+      {/* Camera Capture Modal */}
+      <CameraCapture
+        isOpen={showCamera}
+        onCapture={(file) => {
+          onFileSelected?.(file);
+          onScanClick();
+        }}
+        onClose={() => setShowCamera(false)}
       />
     </section>
   );
