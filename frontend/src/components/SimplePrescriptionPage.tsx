@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { whatsappService } from '@/lib/whatsappService';
 import { reminderService } from '@/lib/reminderService';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SimplePrescriptionPageProps {
   onBack: () => void;
@@ -18,6 +20,9 @@ interface SimplePrescriptionPageProps {
 
 const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }: SimplePrescriptionPageProps) => {
   const { addMedicines, medicines } = useMedicineHistory();
+  const { user } = useAuth();
+  const { language } = useLanguage();
+  const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5001';
 
   const [extractedText] = useState<string | null>(prescriptionText || null);
   const [showReminderDialog, setShowReminderDialog] = useState(false);
@@ -138,6 +143,51 @@ const SimplePrescriptionPage = ({ onBack, prescriptionText, prescriptionImage }:
           description: `Found ${medicineNames.length} medicines`,
         });
       }
+
+      // Save prescription to backend for the logged-in user
+      (async () => {
+        try {
+          if (!user?.id) {
+            console.warn('⚠️ User not logged in, skipping prescription save');
+            return;
+          }
+          console.log('📤 Saving prescription for user:', user.id);
+          const resp = await fetch(`${API_BASE_URL}/api/prescriptions/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              userId: user.id,
+              rawOcrText: prescriptionText,
+              targetLanguage: language === 'en' ? 'English' : language === 'hi' ? 'Hindi' : 'Marathi',
+            }),
+          });
+          
+          console.log('✅ Response status:', resp.status);
+          
+          if (!resp.ok) {
+            const errData = await resp.json().catch(() => ({}));
+            throw new Error(errData?.message || `Server error: ${resp.status}`);
+          }
+          
+          const data = await resp.json();
+          console.log('✅ Backend response:', data);
+          
+          if (data?.success) {
+            toast({ 
+              title: 'Prescription saved!', 
+              description: `Stored ${data.prescription?.medicinesCount || 0} medicines in your account.` 
+            });
+          }
+        } catch (e) {
+          console.error('❌ Save prescription error:', e);
+          toast({
+            title: 'Could not save prescription',
+            description: e instanceof Error ? e.message : 'Server error while saving',
+            variant: 'destructive',
+          });
+        }
+      })();
     }
   }, [prescriptionText, addMedicines]);
 
