@@ -18,7 +18,7 @@ if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
   console.warn('JWT secrets not set in environment variables. Using default values (NOT SECURE FOR PRODUCTION)');
 }
 
-// Authentication middleware
+// Authentication middleware for JWT (existing)
 export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -53,6 +53,83 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
       });
     }
   }
+};
+
+// Middleware to check if user is authenticated (has valid session)
+// Protects routes that require login
+export const isAuthenticated = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    const userId = (req.session as any).userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: 'Authentication required. Please login first.',
+      });
+      return;
+    }
+
+    // Session is valid, proceed to next middleware/route handler
+    next();
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: 'Authentication error',
+      error: error.message,
+    });
+  }
+};
+
+// Middleware to check if user is NOT authenticated
+// Protects routes that should only be accessible when logged out (login, signup)
+export const isNotAuthenticated = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    const userId = (req.session as any).userId;
+
+    if (userId) {
+      res.status(400).json({
+        success: false,
+        message: 'Already logged in. Please logout first.',
+      });
+      return;
+    }
+
+    // User is not authenticated, proceed
+    next();
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: 'Authentication check error',
+      error: error.message,
+    });
+  }
+};
+
+// Middleware for error handling (general purpose)
+export const errorHandler = (
+  err: any,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  console.error('Error:', err);
+
+  const status = err.status || 500;
+  const message = err.message || 'Internal Server Error';
+
+  res.status(status).json({
+    success: false,
+    message,
+    error: process.env.NODE_ENV === 'development' ? err : undefined,
+  });
 };
 
 // Optional authentication middleware (doesn't fail if no token)

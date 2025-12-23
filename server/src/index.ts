@@ -1,8 +1,12 @@
 import express, { Application, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
 import connectDB from './config/db';
-import prescriptionRoutes from './routes/prescriptionRoutes'; // Added this import
+import prescriptionRoutes from './routes/prescriptionRoutes';
+import authRoutes from './routes/authRoutes';
+import { SESSION_SECRET, NODE_ENV, FRONTEND_URL, PORT } from './config/env';
 
 // Initialize configuration
 dotenv.config();
@@ -12,12 +16,35 @@ connectDB();
 
 const app: Application = express();
 
-// Middleware
-app.use(cors()); // Allows your React/Vite frontend to talk to this server
-app.use(express.json()); // Allows the server to understand JSON sent in requests
+// Middleware - Cookie Parser
+app.use(cookieParser());
+
+// Middleware - CORS (configured for frontend)
+app.use(cors({
+  origin: FRONTEND_URL,
+  credentials: true, // Allow cookies to be sent
+}));
+
+// Middleware - Body Parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Middleware - Sessions
+app.use(session({
+  secret: SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: NODE_ENV === 'production', // HTTPS only in production
+    httpOnly: true, // Prevent JavaScript from accessing the cookie
+    sameSite: 'strict', // CSRF protection
+    maxAge: 1000 * 60 * 60 * 24, // 24 hours
+  },
+  name: 'medilingo_session', // Custom session cookie name
+}));
 
 // Routes
-// This line connects your upload and chat logic to the URL path
+app.use('/api/auth', authRoutes);
 app.use('/api/prescriptions', prescriptionRoutes); 
 
 // Basic Health Check Route
@@ -25,8 +52,6 @@ app.get('/', (req: Request, res: Response) => {
   res.send('MediLingo API is running...');
 });
 
-const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
-  console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
 });
