@@ -17,10 +17,10 @@ const PrescriptionUpload = ({ onCameraClick, onUploadClick }: PrescriptionUpload
         guidance in your language
       </p>
 
-      <div className="relative max-w-xl w-full mx-auto p-8 rounded-3xl border-2 border-gray-100 bg-gradient-to-br from-white to-gray-50/50">
+      <div className="relative max-w-xl w-full mx-auto p-6 rounded-3xl border-2 border-gray-100 bg-gradient-to-br from-white to-gray-50/50">
         {/* Icon circle */}
-        <div className="w-24 h-24 mx-auto bg-primary/20 rounded-full flex items-center justify-center mb-6 shadow-lg">
-          <Image className="w-12 h-12 text-primary" strokeWidth={2} />
+        <div className="w-20 h-20 mx-auto bg-primary/20 rounded-full flex items-center justify-center mb-5 shadow-lg">
+          <Image className="w-10 h-10 text-primary" strokeWidth={2} />
         </div>
 
         <h3 className="text-2xl font-bold text-gray-900 mb-3" style={{ lineHeight: '1.5' }}>
@@ -34,7 +34,8 @@ const PrescriptionUpload = ({ onCameraClick, onUploadClick }: PrescriptionUpload
         <div className="flex justify-center gap-4 flex-wrap">
           <Button
             onClick={onCameraClick}
-            className="bg-primary hover:bg-primary/90 text-white px-8 py-6 rounded-xl font-semibold gap-2 text-base shadow-lg hover:shadow-xl transition-all"
+            variant="outline"
+            className="border-2 border-primary text-primary hover:bg-primary hover:text-white hover:border-primary px-8 py-6 rounded-xl font-semibold gap-2 text-base shadow-sm transition-all"
           >
             <Camera className="w-5 h-5" />
             Take Photo
@@ -42,7 +43,7 @@ const PrescriptionUpload = ({ onCameraClick, onUploadClick }: PrescriptionUpload
           <Button
             onClick={onUploadClick}
             variant="outline"
-            className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 px-8 py-6 rounded-xl font-semibold gap-2 text-base shadow-sm hover:shadow-md transition-all"
+            className="border-2 border-primary text-primary hover:bg-primary hover:text-white hover:border-primary px-8 py-6 rounded-xl font-semibold gap-2 text-base shadow-sm transition-all"
           >
             <Upload className="w-5 h-5" />
             Upload File

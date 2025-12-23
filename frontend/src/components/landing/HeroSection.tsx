@@ -96,7 +96,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
   };
 
   return (
-    <section className="min-h-screen h-screen bg-gradient-to-br from-background via-background to-primary/5 pt-12 pb-12 px-5 flex flex-col relative overflow-hidden">
+    <section className="min-h-[calc(100svh-4rem)] md:min-h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-background to-primary/5 px-5 pb-[env(safe-area-inset-bottom)] flex flex-col relative overflow-hidden">
       {/* Grid background - entire page */}
       <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none z-0" style={{
         backgroundImage: `linear-gradient(to right, rgba(16, 185, 129, 0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(16, 185, 129, 0.3) 1px, transparent 1px)`,
@@ -109,7 +109,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
         <div className="absolute bottom-32 right-10 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-pulse delay-700"></div>
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-start pt-4 md:pt-6 pb-4">
         {/* Prescription Upload Component */}
         <div className="w-full mb-6 fade-up" style={{ animationDelay: "0.1s" }}>
           <PrescriptionUpload 
@@ -133,7 +133,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
         </div>
 
         {/* Features Pills */}
-        <div className="flex flex-wrap justify-center gap-2 fade-up" style={{ animationDelay: "0.2s" }}>
+        <div className="flex flex-wrap justify-center gap-2 fade-up mt-2 md:mt-3" style={{ animationDelay: "0.2s" }}>
           {[
             { icon: "📷", text: "Instant Scan", clickable: true, handler: handleScanClick },
             { icon: "🔍", text: "AI Recognition", clickable: true, handler: handleAIRecognition },
