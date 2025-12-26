@@ -15,6 +15,7 @@ const BookAppointment = () => {
     specialty: "",
     notes: ""
   });
+  const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   const specialties = [
@@ -28,7 +29,7 @@ const BookAppointment = () => {
     "Neurologist"
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.date || !formData.time || !formData.specialty) {
       toast({
@@ -38,11 +39,33 @@ const BookAppointment = () => {
       });
       return;
     }
-    setSubmitted(true);
-    toast({
-      title: "Appointment requested",
-      description: "We'll confirm your appointment shortly via SMS/call",
-    });
+    try {
+      const res = await fetch("/api/appointment/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, email }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        toast({
+          title: "Error",
+          description: `Failed to book appointment: ${errText}`,
+          variant: "destructive"
+        });
+        throw new Error(errText);
+      }
+      setSubmitted(true);
+      toast({
+        title: "Appointment requested",
+        description: "Confirmation email sent! We'll confirm your appointment shortly.",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Could not book appointment. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (submitted) {
@@ -96,6 +119,20 @@ const BookAppointment = () => {
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             placeholder="+91 XXXXX XXXXX"
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
+            <span role="img" aria-label="email">📧</span> Email *
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
             required
           />
         </div>

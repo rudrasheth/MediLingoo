@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => ({
     port: 5173,
     // Allow Vite to fall back to the next free port if 5173 is busy
     strictPort: false,
+    proxy: {
+      '/api': 'http://localhost:5001',
+    },
   },
   preview: {
     host: "localhost",

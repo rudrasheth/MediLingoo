@@ -320,9 +320,9 @@ const ProfilePage = () => {
                       <Button
                         onClick={() => setChangePasswordMode(true)}
                         variant="outline"
-                        className="w-full gap-1.5 border border-teal-600 text-teal-600 hover:bg-teal-50 rounded-lg text-xs h-8"
+                        className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-yellow-400 text-yellow-800 font-bold py-2 mt-2 bg-gradient-to-r from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200 shadow-sm transition-all duration-200 text-sm"
                       >
-                        🔐 Password
+                        <span role="img" aria-label="password">🔒</span> Password
                       </Button>
                     </div>
                   </div>

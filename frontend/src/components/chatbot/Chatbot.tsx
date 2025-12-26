@@ -11,6 +11,7 @@ interface ChatbotProps {
   onClose: () => void;
   initialMessage?: string | null;
   autoStartVoice?: boolean;
+  onAmbulanceClick?: () => void;
 }
 
 const mockChatHistory: ChatHistory[] = [
@@ -61,7 +62,7 @@ const getMedicationResponse = (input: string): string => {
   return 'I\'m here to help with your medication questions!\n\nI can assist with:\n• Dosage and how much to take\n• When and how often to take your medicine\n• Food and drink interactions\n• Managing side effects\n• Missed dose instructions\n• Drug interactions\n• General medication safety\n• Finding nearby pharmacies\n\nPlease provide more details about your question, and I\'ll give you specific information. For serious concerns, always consult your doctor or pharmacist.';
 };
 
-const Chatbot = ({ isOpen, onClose, initialMessage, autoStartVoice }: ChatbotProps) => {
+const Chatbot = ({ isOpen, onClose, initialMessage, autoStartVoice, onAmbulanceClick: onAmbulanceClickProp }: ChatbotProps) => {
   const { user } = useAuth();
   const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5001';
   const [chats, setChats] = useState<Record<string, Message[]>>({
@@ -121,9 +122,12 @@ const Chatbot = ({ isOpen, onClose, initialMessage, autoStartVoice }: ChatbotPro
   };
 
   const handleAmbulanceClick = () => {
-    // Call emergency services
-    // In a real app, this could integrate with actual emergency services
-    alert('🚑 EMERGENCY ALERT!\n\nCalling local emergency services...\n\nPlease ensure you are in a safe location and an ambulance is being dispatched to your area.\n\nEmergency Number: 911 (or your local emergency number)');
+    if (onAmbulanceClickProp) {
+      onAmbulanceClickProp();
+    } else {
+      // Fallback: show alert if no callback provided
+      alert('🚑 EMERGENCY ALERT!\n\nCalling local emergency services...\n\nPlease ensure you are in a safe location and an ambulance is being dispatched to your area.\n\nEmergency Number: 911 (or your local emergency number)');
+    }
   };
 
   const handleSendMessage = useCallback(async (message: string) => {

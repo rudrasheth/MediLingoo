@@ -23,6 +23,7 @@ import JanAushadhiFinder from "@/components/JanAushadhiFinder";
 import BookAppointment from "@/components/BookAppointment";
 import MedicineDelivery from "@/components/MedicineDelivery";
 import ActionSidebar from "./ActionSidebar";
+import DoctorChat from "@/components/DoctorChat";
 
 interface HeroSectionProps {
   onScanClick: () => void;
@@ -43,6 +44,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
   const [autoStartVoice, setAutoStartVoice] = useState(false);
+  const [showDoctorChat, setShowDoctorChat] = useState(false);
   const { isAuthenticated } = useAuth();
 
   const ensureLoggedIn = () => {
@@ -186,6 +188,19 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
           </div>
         </div>
 
+        {/* Consult a Doctor Button */}
+        <div className="w-full max-w-2xl mx-auto mb-3 fade-up" style={{ animationDelay: "0.19s" }}>
+          <Button
+            onClick={() => setShowDoctorChat(true)}
+            className="w-full flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full py-3 px-6 text-lg font-semibold shadow-md"
+          >
+            <img src="https://cdn-icons-png.flaticon.com/512/387/387561.png" alt="Doctor" className="w-7 h-7 rounded-full border-2 border-white bg-white mr-2" />
+            Consult a Doctor
+          </Button>
+        </div>
+
+        <DoctorChat isOpen={showDoctorChat} onClose={() => setShowDoctorChat(false)} />
+
         {/* Removed quick action chips; available in sidebar */}
       </div>
 
@@ -325,6 +340,10 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
         }} 
         initialMessage={chatInitialMessage}
         autoStartVoice={autoStartVoice}
+        onAmbulanceClick={() => {
+          setShowChatbot(false);
+          setShowAmbulanceDialog(true);
+        }}
       />
 
       {/* Camera Capture Modal */}
