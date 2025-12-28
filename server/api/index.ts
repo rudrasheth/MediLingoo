@@ -4,42 +4,17 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  // Simple health check
-  if (req.url === '/' && req.method === 'GET') {
-    return res.status(200).json({
-      status: 'ok',
-      message: 'MediLingo API is running',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0'
+  try {
+    // Dynamically import ESM app to avoid CJS require() issues
+    const { app, initDB } = await import('../src/app.js');
+    
+    await initDB();
+    return (app as any)(req as any, res as any);
+  } catch (error) {
+    console.error('API Error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-
-  // Placeholder endpoints
-  if (req.url === '/api/auth' && req.method === 'POST') {
-    return res.status(200).json({
-      status: 'auth',
-      message: 'Auth endpoint ready'
-    });
-  }
-
-  // Default 404
-  return res.status(404).json({
-    error: 'Endpoint not found',
-    path: req.url,
-    method: req.method
-  });
 }

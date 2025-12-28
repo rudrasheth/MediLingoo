@@ -1,13 +1,10 @@
 {
   "version": 2,
+  "installCommand": "npm install --legacy-peer-deps",
   "builds": [
     {
       "src": "api/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "maxDuration": 60,
-        "memory": 1024
-      }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
