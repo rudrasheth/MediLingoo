@@ -26,14 +26,14 @@ const ActionSidebar = ({
 }: ActionSidebarProps) => {
 
   const items = [
-    { label: "Ambulance", icon: <Ambulance className="w-4 h-4" />, onClick: onAmbulance, accent: "red" },
-    { label: "Blood Bank", icon: <Droplets className="w-4 h-4" />, onClick: onBloodBank, accent: "rose" },
+    { label: "Ambulance", icon: <Ambulance className="w-4 h-4" />, onClick: onAmbulance, accent: "emerald" },
+    { label: "Blood Bank", icon: <Droplets className="w-4 h-4" />, onClick: onBloodBank, accent: "emerald" },
     { label: "Generic Stores", icon: <Pill className="w-4 h-4" />, onClick: onGenericStores, accent: "emerald" },
-    { label: "Compare Medicines", icon: <Camera className="w-4 h-4" />, onClick: onCompareMedicines, accent: "primary" },
-    { label: "Scan Prescription", icon: <Camera className="w-4 h-4" />, onClick: onScanPrescription, accent: "primary" },
-    { label: "Nearby Hospitals", icon: <Building2 className="w-4 h-4" />, onClick: onNearbyHospitals, accent: "primary" },
-    { label: "Nearby Pharmacies", icon: <MapPin className="w-4 h-4" />, onClick: onNearbyPharmacies, accent: "primary" },
-    { label: "Book Appointment", icon: <CalendarCheck className="w-4 h-4" />, onClick: onBookAppointment, accent: "blue" },
+    { label: "Compare Medicines", icon: <Camera className="w-4 h-4" />, onClick: onCompareMedicines, accent: "emerald" },
+    { label: "Scan Prescription", icon: <Camera className="w-4 h-4" />, onClick: onScanPrescription, accent: "emerald" },
+    { label: "Nearby Hospitals", icon: <Building2 className="w-4 h-4" />, onClick: onNearbyHospitals, accent: "emerald" },
+    { label: "Nearby Pharmacies", icon: <MapPin className="w-4 h-4" />, onClick: onNearbyPharmacies, accent: "emerald" },
+    { label: "Book Appointment", icon: <CalendarCheck className="w-4 h-4" />, onClick: onBookAppointment, accent: "emerald" },
     { label: "Medicine Delivery", icon: <Truck className="w-4 h-4" />, onClick: onMedicineDelivery, accent: "emerald" },
   ];
 

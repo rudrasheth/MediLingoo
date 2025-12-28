@@ -1,40 +1,39 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Droplets, Locate, Loader2, Map, Navigation, LocateFixed } from "lucide-react";
 
 interface BloodBank {
   name: string;
-  number: string;
   address: string;
-  availability: string;
+  placeId: string;
+  lat: number;
+  lng: number;
 }
 
-const bloodBanks: BloodBank[] = [
-  {
-    name: "Red Cross Blood Bank",
-    number: "+91-1800-11-2444",
-    address: "Nationwide helpline",
-    availability: "24/7",
-  },
-  {
-    name: "State Blood Bank",
-    number: "+91-104",
-    address: "Nearest government blood bank",
-    availability: "24/7",
-  },
-  {
-    name: "Sanjeevani Blood Center",
-    number: "+91-99999-00000",
-    address: "Local registered center",
-    availability: "7 AM - 11 PM",
-  },
-];
+const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
+const fetchNearbyBloodBanks = async (lat: number, lng: number): Promise<BloodBank[]> => {
+  const radius = 5000; // 5km
+  const type = "blood_bank";
+  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&keyword=blood%20bank&key=${GOOGLE_PLACES_API_KEY}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  if (!data.results) return [];
+  return data.results.map((place: any) => ({
+    name: place.name,
+    address: place.vicinity,
+    placeId: place.place_id,
+    lat: place.geometry.location.lat,
+    lng: place.geometry.location.lng,
+  }));
+};
 const BloodBankFinder = () => {
   const [locating, setLocating] = useState(false);
   const [locationNote, setLocationNote] = useState("Use your location to suggest the nearest blood bank.");
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>({ lat: 19.1197, lng: 72.8468 }); // Andheri default
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [bloodBanks, setBloodBanks] = useState<BloodBank[]>([]);
 
   const defaultCoords = { lat: 19.1197, lng: 72.8468 }; // Andheri East fallback
 
@@ -46,22 +45,35 @@ const BloodBankFinder = () => {
     }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         setLocating(false);
         const { latitude, longitude } = pos.coords;
         setCoords({ lat: latitude, lng: longitude });
-        setLocationNote(`Nearest options around (${latitude.toFixed(4)}, ${longitude.toFixed(4)}). Call to confirm availability.`);
+        setLocationNote(`Nearest options around (${latitude.toFixed(4)}, ${longitude.toFixed(4)}).`);
+        const banks = await fetchNearbyBloodBanks(latitude, longitude);
+        setBloodBanks(banks);
       },
-      () => {
+      async () => {
         setLocating(false);
         setCoords(defaultCoords);
-        setLocationNote("Couldn't fetch location. Showing default area. Please call the numbers below directly.");
+        setLocationNote("Couldn't fetch location. Showing default area.");
+        const banks = await fetchNearbyBloodBanks(defaultCoords.lat, defaultCoords.lng);
+        setBloodBanks(banks);
       },
       { timeout: 8000 }
     );
   };
 
   const mapPoint = coords ?? defaultCoords;
+
+  useEffect(() => {
+    // On mount, try to fetch with default coords
+    (async () => {
+      const banks = await fetchNearbyBloodBanks(mapPoint.lat, mapPoint.lng);
+      setBloodBanks(banks);
+    })();
+    // eslint-disable-next-line
+  }, [mapPoint.lat, mapPoint.lng]);
   const bboxSize = 0.02; // ~2km box
   const bbox = [
     mapPoint.lng - bboxSize,
@@ -106,7 +118,7 @@ const BloodBankFinder = () => {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="secondary" className="gap-2" onClick={() => window.open(mapsSearchUrl, "_blank") }>
+        <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => window.open(mapsSearchUrl, "_blank") }>
           <Map className="w-4 h-4" />
           Open in Google Maps
         </Button>
@@ -115,7 +127,7 @@ const BloodBankFinder = () => {
 
       <div className="space-y-2">
         {bloodBanks.map((bank) => (
-          <Card key={bank.number} className="hover:shadow-md transition-shadow">
+          <Card key={bank.placeId} className="hover:shadow-md transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
@@ -124,13 +136,16 @@ const BloodBankFinder = () => {
                     <MapPin className="w-4 h-4 text-rose-500" />
                     {bank.address}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">Availability: {bank.availability}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className="text-lg font-bold text-rose-600">{bank.number}</span>
-                  <Button size="sm" className="bg-rose-600 hover:bg-rose-700 text-white gap-2" onClick={() => handleCall(bank.number)}>
-                    <Phone className="w-4 h-4" />
-                    Call
+                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2" onClick={() => {
+                    const url = coords
+                      ? `https://www.google.com/maps/dir/?api=1&origin=${coords.lat},${coords.lng}&destination=${bank.lat},${bank.lng}`
+                      : `https://www.google.com/maps/search/?api=1&query=${bank.lat},${bank.lng}`;
+                    window.open(url, "_blank");
+                  }}>
+                    <Navigation className="w-4 h-4" />
+                    Directions
                   </Button>
                 </div>
               </div>

@@ -326,7 +326,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
           <div className="card-elevated border border-secondary/30 bg-secondary/5 p-4 md:p-5 rounded-3xl flex flex-col gap-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-secondary">Shared Profiles</p>
+                  <p className="text-sm font-semibold text-emerald-700">Shared Profiles</p>
                 <p className="text-xs text-muted-foreground mt-1">You have access to these profiles</p>
               </div>
             </div>
@@ -338,11 +338,11 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
               {sharedProfiles.map((p) => (
                 <div key={p.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-white border border-border/80">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">{p.name}</p>
+                    <p className="text-sm font-semibold text-emerald-700">{p.name}</p>
                     {p.age && <p className="text-xs text-muted-foreground">Age {p.age}</p>}
                   </div>
                   <Button
-                    className="rounded-full bg-secondary hover:bg-secondary/90 text-white px-3 py-1 h-auto text-xs"
+                    className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 h-auto text-xs"
                     onClick={() => setSelectedSharedProfile({ id: p.id, name: p.name })}
                   >
                     View
@@ -352,7 +352,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
             </div>
             <div>
               <Button
-                className="rounded-full bg-secondary hover:bg-secondary/90 text-white px-4 py-2 h-auto text-sm w-full"
+                className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 h-auto text-sm w-full"
                 onClick={() => setRedeemOpen(true)}
               >
                 Redeem Sharing Code
@@ -407,7 +407,7 @@ const HeroSection = ({ onScanClick, onFileSelected }: HeroSectionProps) => {
         <div className="w-full max-w-2xl mx-auto mb-3 fade-up" style={{ animationDelay: "0.19s" }}>
           <Button
             onClick={() => setShowDoctorChat(true)}
-            className="w-full flex items-center gap-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-full py-3 px-6 text-lg font-semibold shadow-md"
+            className="w-full flex items-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full py-3 px-6 text-lg font-semibold shadow-md"
           >
             <img src="https://cdn-icons-png.flaticon.com/512/387/387561.png" alt="Doctor" className="w-7 h-7 rounded-full border-2 border-white bg-white mr-2" />
             Consult a Doctor
