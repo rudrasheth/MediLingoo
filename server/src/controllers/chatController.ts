@@ -72,30 +72,42 @@ const SYMPTOM_TO_DISEASE_MAP: { [key: string]: string } = {
   'raynaud': "Raynaud's Disease",
   'raynauds': "Raynaud's Disease",
   'freezing hands': "Raynaud's Disease",
-  'freezing feet': "Raynaud's Disease"
+  'freezing feet': "Raynaud's Disease",
+  'cancer': 'SKIP_DATABASE'  // If found, skip database and use Gemini
 };
 
 // Extract disease name from message and try to find direct match
 const findDiseaseFromQuery = async (userMessage: string) => {
   const lowerMessage = userMessage.toLowerCase();
   
-  // First try symptom-to-disease mapping
+  // First try symptom-to-disease mapping (exact word match with word boundaries)
   for (const [symptom, disease] of Object.entries(SYMPTOM_TO_DISEASE_MAP)) {
-    if (lowerMessage.includes(symptom)) {
+    const symptomRegex = new RegExp(`\\b${symptom}\\b`, 'i');
+    if (symptomRegex.test(lowerMessage)) {
+      // Check if this is marked to skip database
+      if (disease === 'SKIP_DATABASE') {
+        console.log(`⏭️  Skipping database for: "${symptom}" (will use Gemini)`);
+        return null; // Force fallback to Gemini
+      }
+      console.log(`✅ Symptom match found: "${symptom}" → "${disease}"`);
       const result = await MedicalKnowledge.findOne({ disease }).lean();
       if (result) return [result];
     }
   }
   
-  // Then try direct disease name match
+  // Then try direct disease name match (exact word match)
   const allDiseases = await MedicalKnowledge.distinct('disease');
   for (const disease of allDiseases) {
-    if (lowerMessage.includes(disease.toLowerCase())) {
+    // Use word boundary regex to match exact words only
+    const diseaseRegex = new RegExp(`\\b${disease.toLowerCase()}\\b`, 'i');
+    if (diseaseRegex.test(lowerMessage)) {
+      console.log(`✅ Exact disease match found in database: "${disease}"`);
       const results = await MedicalKnowledge.find({ disease }).limit(3).lean();
       if (results.length > 0) return results;
     }
   }
   
+  console.log(`❌ No exact disease match found in database for: "${userMessage}"`);
   return null;
 };
 
@@ -164,73 +176,8 @@ export const handleChat = async (req: Request, res: Response) => {
       ? `Patient History: ${history.chronicConditions.join(", ")}. Current Meds: ${history.activeMedications.map(m => m.name).join(", ")}.`
       : "No previous history found.";
 
-    // 2. Check if query needs semantic search
-    if (shouldUseSemanticSearch(userMessage)) {
-      console.log('🔍 Using semantic search for:', userMessage);
-      
-      // Try direct disease name matching first
-      let searchResults = await findDiseaseFromQuery(userMessage);
-      
-      // If no direct match, use vector search
-      if (!searchResults) {
-        console.log('📊 No direct match, performing vector search...');
-        searchResults = await performSemanticSearch(userMessage);
-      } else {
-        console.log('✅ Found direct disease match');
-      }
-      
-      if (searchResults && searchResults.length > 0) {
-        const topMatch = searchResults[0] as any;
-        const detectedDisease = topMatch.disease;
-        const severityScore = getSeverityScore(detectedDisease);
-        const severityLevel = getSeverityLevel(severityScore);
-        const isEmergencySituation = isEmergency(severityScore, EMERGENCY_THRESHOLD);
-
-        // Update medical history with severity score
-        if (userId && history) {
-          const updatedMaxScore = Math.max(history.maxSeverityScore || 0, severityScore);
-          await MedicalHistory.updateOne(
-            { userId },
-            {
-              maxSeverityScore: updatedMaxScore,
-              lastSeverityScore: severityScore,
-              $push: {
-                severityHistory: {
-                  score: Math.round(severityScore * 10) / 10,
-                  detectedDisease,
-                  timestamp: new Date()
-                }
-              },
-              lastUpdated: new Date()
-            }
-          );
-          console.log(`📊 Severity tracking - Disease: ${detectedDisease}, Score: ${Math.round(severityScore * 10) / 10}/10, Level: ${severityLevel}`);
-        }
-
-        const reply = `Based on your query about **${topMatch.disease}**, here's what I found:
-
-**Remedy:** ${topMatch.remedy}
-
-**Precautions:**
-${topMatch.precautions?.map((p: string) => `• ${p}`).join('\n') || 'Consult a healthcare provider.'}
-
-**Note:** This is general guidance. Please consult a doctor for personalized medical advice, especially given your context: ${context}`;
-
-        return res.status(200).json({ 
-          reply,
-          searchResults: searchResults.slice(0, 3),
-          source: 'semantic_search',
-          severity: {
-            score: Math.round(severityScore * 10) / 10,
-            level: severityLevel,
-            isEmergency: isEmergencySituation,
-            disease: detectedDisease
-          }
-        });
-      }
-      // Fall through to Gemini if no results
-      console.log('⚠️ No semantic search results, falling back to Gemini');
-    }
+    // 2. SKIP DATABASE - Go directly to Gemini API
+    console.log('⚡ Skipping database search, using Gemini API directly for:', userMessage);
 
     // 3. Default: Ask Gemini with Context (fall back across known working models when 404 occurs)
     const chatPrompt = `
@@ -238,21 +185,37 @@ ${topMatch.precautions?.map((p: string) => `• ${p}`).join('\n') || 'Consult a 
       Context: ${context}
       User Question: ${userMessage}
       Answer clearly and remind the user to consult a doctor for emergencies.
+      Be specific about symptoms and treatments.
     `;
 
-    // Check for disease in user message even if not doing semantic search
+    // Extract disease from user message for severity checking
     let detectedDisease = null;
     let severityScore = 0;
     let severityLevel = 'Low';
     let isEmergencySituation = false;
 
     const lowerMessage = userMessage.toLowerCase();
-    for (const [symptom, disease] of Object.entries(SYMPTOM_TO_DISEASE_MAP)) {
-      if (lowerMessage.includes(symptom)) {
-        detectedDisease = disease;
-        severityScore = getSeverityScore(disease);
+    
+    // Check DISEASE_KEYWORDS first (more comprehensive)
+    for (const keyword of DISEASE_KEYWORDS) {
+      if (lowerMessage.includes(keyword.toLowerCase())) {
+        // Try to get the disease from database
+        const dbDisease = await MedicalKnowledge.findOne({ 
+          disease: { $regex: keyword, $options: 'i' } 
+        }).lean();
+        
+        if (dbDisease) {
+          detectedDisease = dbDisease.disease;
+        } else {
+          // If not in database, use the keyword as disease name
+          detectedDisease = keyword;
+        }
+        
+        severityScore = getSeverityScore(detectedDisease);
         severityLevel = getSeverityLevel(severityScore);
         isEmergencySituation = isEmergency(severityScore, EMERGENCY_THRESHOLD);
+        
+        console.log(`🔬 Detected disease from keywords: ${detectedDisease}, Severity: ${Math.round(severityScore * 10) / 10}/10`);
         
         // Update medical history with severity
         if (userId && history) {
@@ -265,14 +228,14 @@ ${topMatch.precautions?.map((p: string) => `• ${p}`).join('\n') || 'Consult a 
               $push: {
                 severityHistory: {
                   score: Math.round(severityScore * 10) / 10,
-                  detectedDisease: disease,
-                  timestamp: new Date()
+                  detectedDisease,
+                  timestamp: new Date(),
+                  source: 'gemini_detection'
                 }
               },
               lastUpdated: new Date()
             }
           );
-          console.log(`📊 Severity detected in Gemini path - Disease: ${disease}, Score: ${Math.round(severityScore * 10) / 10}/10, Level: ${severityLevel}`);
         }
         break;
       }
@@ -283,9 +246,11 @@ ${topMatch.precautions?.map((p: string) => `• ${p}`).join('\n') || 'Consult a 
       try {
         const model = genAI.getGenerativeModel({ model: modelId });
         const result = await model.generateContent(chatPrompt);
+        const geminiResponse = result.response.text();
+        
         const response: any = {
-          reply: result.response.text(),
-          source: 'gemini_ai'
+          reply: geminiResponse,
+          source: 'gemini_ai'  // Always from Gemini now
         };
         
         // Add severity if detected
@@ -298,12 +263,15 @@ ${topMatch.precautions?.map((p: string) => `• ${p}`).join('\n') || 'Consult a 
           };
         }
         
+        console.log(`✅ Gemini API response sent.${detectedDisease ? ` Disease: ${detectedDisease}, Severity: ${Math.round(severityScore * 10) / 10}/10` : ''}`);
         return res.status(200).json(response);
       } catch (err) {
         lastError = err;
         if (isNotFound(err)) {
+          console.log(`⚠️ Model ${modelId} not found, trying next...`);
           continue;
         }
+        console.error(`❌ Error with model ${modelId}:`, (err as any)?.message);
         break;
       }
     }

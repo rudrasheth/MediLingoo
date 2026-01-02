@@ -53,32 +53,34 @@ const AmbulanceFinder = () => {
       return;
     }
     setLocating(true);
+    setNote("🔄 Getting your location...");
+    
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocating(false);
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setNote(`Live location locked at ${pos.coords.latitude.toFixed(3)}, ${pos.coords.longitude.toFixed(3)}.`);
+        const newCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setCoords(newCoords);
+        setNote(`Live location locked at ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}.`);
+        console.log('📍 Current Location:', newCoords);
       },
-      () => {
+      (error) => {
         setLocating(false);
-        setNote("Could not fetch GPS. Using preset coordinates.");
+        console.error('Location Error:', error);
+        setNote("Could not fetch GPS. Using preset coordinates. Please enable location in settings.");
         setCoords(defaultCoords);
       },
-      { enableHighAccuracy: true, timeout: 8000 }
+      { 
+        enableHighAccuracy: true, 
+        timeout: 10000,
+        maximumAge: 0 
+      }
     );
   };
 
+  const API_KEY = 'AIzaSyDI010MbT9t-gDE1zCApS3opd_WARKAbYU';
   const mapPoint = coords ?? defaultCoords;
-  const bboxSize = 0.02;
-  const bbox = [
-    mapPoint.lng - bboxSize,
-    mapPoint.lat - bboxSize,
-    mapPoint.lng + bboxSize,
-    mapPoint.lat + bboxSize,
-  ].join("%2C");
-  // Use Google Maps embed centered near user's location for ambulance search
-  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(`ambulance near ${mapPoint.lat},${mapPoint.lng}`)}&z=14&output=embed`;
-  const mapsNavUrl = `https://www.google.com/maps/search/?api=1&query=ambulance+near+${mapPoint.lat},${mapPoint.lng}`;
+  const mapUrl = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d3766!2d${mapPoint.lng}!3d${mapPoint.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1234567890&key=${API_KEY}`;
+  const mapsNavUrl = `https://www.google.com/maps/search/?api=1&query=ambulance+near+${mapPoint.lat},${mapPoint.lng}&key=${API_KEY}`;
 
   return (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto">
@@ -109,7 +111,7 @@ const AmbulanceFinder = () => {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="secondary" className="gap-2" onClick={() => window.open(mapsNavUrl, "_blank") }>
+        <Button size="sm" variant="secondary" className="gap-2" onClick={() => window.open(mapsNavUrl, "_blank")}>
           <Map className="w-4 h-4" />
           Open live navigation
         </Button>

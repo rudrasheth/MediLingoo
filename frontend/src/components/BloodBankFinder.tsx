@@ -12,7 +12,7 @@ interface BloodBank {
   lng: number;
 }
 
-const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GOOGLE_PLACES_API_KEY = 'AIzaSyDI010MbT9t-gDE1zCApS3opd_WARKAbYU';
 
 const fetchNearbyBloodBanks = async (lat: number, lng: number): Promise<BloodBank[]> => {
   const radius = 5000; // 5km
@@ -74,20 +74,10 @@ const BloodBankFinder = () => {
     })();
     // eslint-disable-next-line
   }, [mapPoint.lat, mapPoint.lng]);
-  const bboxSize = 0.02; // ~2km box
-  const bbox = [
-    mapPoint.lng - bboxSize,
-    mapPoint.lat - bboxSize,
-    mapPoint.lng + bboxSize,
-    mapPoint.lat + bboxSize,
-  ].join("%2C");
+  
   // Use Google Maps embed centered near user's location for blood bank search
-  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(`blood bank near ${mapPoint.lat},${mapPoint.lng}`)}&z=14&output=embed`;
-  const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`blood bank near ${mapPoint.lat},${mapPoint.lng}`)}`;
-
-  const handleCall = (number: string) => {
-    window.location.href = `tel:${number}`;
-  };
+  const mapUrl = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d3766!2d${mapPoint.lng}!3d${mapPoint.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1234567890&key=AIzaSyDI010MbT9t-gDE1zCApS3opd_WARKAbYU`;
+  const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`blood bank near ${mapPoint.lat},${mapPoint.lng}`)}&key=AIzaSyDI010MbT9t-gDE1zCApS3opd_WARKAbYU`;
 
   return (
     <div className="space-y-3 max-h-[60vh] overflow-y-auto">
@@ -140,8 +130,8 @@ const BloodBankFinder = () => {
                 <div className="flex flex-col items-end gap-2">
                   <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2" onClick={() => {
                     const url = coords
-                      ? `https://www.google.com/maps/dir/?api=1&origin=${coords.lat},${coords.lng}&destination=${bank.lat},${bank.lng}`
-                      : `https://www.google.com/maps/search/?api=1&query=${bank.lat},${bank.lng}`;
+                      ? `https://www.google.com/maps/dir/?api=1&origin=${coords.lat},${coords.lng}&destination=${bank.lat},${bank.lng}&key=AIzaSyDI010MbT9t-gDE1zCApS3opd_WARKAbYU`
+                      : `https://www.google.com/maps/search/?api=1&query=${bank.lat},${bank.lng}&key=AIzaSyDI010MbT9t-gDE1zCApS3opd_WARKAbYU`;
                     window.open(url, "_blank");
                   }}>
                     <Navigation className="w-4 h-4" />
