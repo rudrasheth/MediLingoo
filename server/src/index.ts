@@ -117,6 +117,16 @@ app.get('/', (req: Request, res: Response) => {
   res.send('MediLingo API is running...');
 });
 
+// Global Express Error Handler (Prevents HTML responses for API errors)
+app.use((err: any, req: Request, res: Response, next: express.NextFunction) => {
+  console.error('❌ Express Application Error:', err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err : undefined
+  });
+});
+
 // Global error handlers
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
