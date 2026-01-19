@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { JWTPayload } from '../types/index.js';
+import { JWTPayload } from '../types/index';
 
 // Extend Express Request interface to include user
 declare global {
@@ -24,9 +24,9 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    res.status(401).json({ 
-      success: false, 
-      error: 'Access token required' 
+    res.status(401).json({
+      success: false,
+      error: 'Access token required'
     });
     return;
   }
@@ -37,19 +37,19 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      res.status(401).json({ 
-        success: false, 
-        error: 'Token expired' 
+      res.status(401).json({
+        success: false,
+        error: 'Token expired'
       });
     } else if (error instanceof jwt.JsonWebTokenError) {
-      res.status(403).json({ 
-        success: false, 
-        error: 'Invalid token' 
+      res.status(403).json({
+        success: false,
+        error: 'Invalid token'
       });
     } else {
-      res.status(500).json({ 
-        success: false, 
-        error: 'Token verification failed' 
+      res.status(500).json({
+        success: false,
+        error: 'Token verification failed'
       });
     }
   }
@@ -155,15 +155,15 @@ export const optionalAuth = (req: Request, res: Response, next: NextFunction): v
 
 // Generate access token
 export const generateAccessToken = (payload: Omit<JWTPayload, 'iat' | 'exp'>): string => {
-  return jwt.sign(payload, JWT_SECRET, { 
-    expiresIn: process.env.JWT_EXPIRES_IN || '15m' 
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '15m'
   });
 };
 
 // Generate refresh token
 export const generateRefreshToken = (payload: Omit<JWTPayload, 'iat' | 'exp'>): string => {
-  return jwt.sign(payload, JWT_REFRESH_SECRET, { 
-    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' 
+  return jwt.sign(payload, JWT_REFRESH_SECRET, {
+    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
   });
 };
 
@@ -179,9 +179,9 @@ export const authRateLimit = (maxAttempts: number = 5, windowMs: number = 15 * 6
   return (req: Request, res: Response, next: NextFunction): void => {
     const clientId = req.ip || req.connection.remoteAddress || 'unknown';
     const now = Date.now();
-    
+
     const attempts = authAttempts.get(clientId);
-    
+
     if (attempts) {
       // Reset counter if window has passed
       if (now - attempts.lastAttempt > windowMs) {
@@ -200,7 +200,7 @@ export const authRateLimit = (maxAttempts: number = 5, windowMs: number = 15 * 6
     } else {
       authAttempts.set(clientId, { count: 1, lastAttempt: now });
     }
-    
+
     next();
   };
 };
@@ -209,7 +209,7 @@ export const authRateLimit = (maxAttempts: number = 5, windowMs: number = 15 * 6
 setInterval(() => {
   const now = Date.now();
   const windowMs = 15 * 60 * 1000; // 15 minutes
-  
+
   for (const [clientId, attempts] of authAttempts.entries()) {
     if (now - attempts.lastAttempt > windowMs) {
       authAttempts.delete(clientId);
