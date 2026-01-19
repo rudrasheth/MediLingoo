@@ -43,8 +43,25 @@ app.use(cookieParser());
 
 // Middleware - CORS (configured for frontend)
 app.use(cors({
-  origin: FRONTEND_URL,
-  credentials: true, // Allow cookies to be sent
+  origin: (origin, callback) => {
+    const allowed = [FRONTEND_URL];
+
+    // Allow requests with no origin (like mobile apps or server-to-server)
+    if (!origin) return callback(null, true);
+
+    // Allow specific origins
+    if (allowed.includes(origin)) return callback(null, true);
+
+    // Allow localhost (Development)
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) return callback(null, true);
+
+    // Allow Vercel deployments (Production/Preview)
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+
+    console.log('❌ CSS Blocked Origin:', origin);
+    callback(null, false); // Block others
+  },
+  credentials: true, // Allow cookies
 }));
 
 // Middleware - Body Parser
