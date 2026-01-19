@@ -21,7 +21,9 @@ const connectDB = async () => {
 
   try {
     if (process.env.VERCEL && !cachedPromise) {
-      cachedPromise = mongoose.connect(process.env.MONGODB_URI as string);
+      cachedPromise = mongoose.connect(process.env.MONGODB_URI as string, {
+        serverSelectionTimeoutMS: 5000,
+      });
       await cachedPromise;
     } else if (!process.env.VERCEL) {
       // Local dev - just connect

@@ -24,19 +24,24 @@ dotenv.config();
 const app: Application = express();
 const httpServer = createServer(app);
 
-// Initialize Socket.io with CORS
-const io = new SocketIOServer(httpServer, {
-  cors: {
-    origin: FRONTEND_URL,
-    credentials: true,
-    methods: ['GET', 'POST']
-  },
-  // Optimize for 5-second GPS updates
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  // Buffering settings for burst updates
-  transports: ['websocket', 'polling'],
-});
+// Initialize Socket.io with CORS (Wrapped to prevent startup crash on Vercel)
+let io: any;
+try {
+  io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: FRONTEND_URL,
+      credentials: true,
+      methods: ['GET', 'POST']
+    },
+    // Optimize for 5-second GPS updates
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    // Buffering settings for burst updates
+    transports: ['websocket', 'polling'],
+  });
+} catch (e) {
+  console.warn('⚠️ Socket.io initialization failed/skipped:', e);
+}
 
 // Middleware - Cookie Parser
 app.use(cookieParser());
