@@ -68,6 +68,17 @@ app.use(session({
 // Serve static files (for driver simulator)
 app.use(express.static('public'));
 
+// Middleware - Ensure DB Connection (Critical for Serverless/Vercel)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection failed in middleware:', error);
+    res.status(500).json({ error: 'Database connection error' });
+  }
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
@@ -83,6 +94,7 @@ app.use('/api/cycle', cycleRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.send('MediLingo API is running...');
 });
+
 // Global error handlers
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
@@ -93,10 +105,10 @@ process.on('uncaughtException', (error) => {
   process.exit(1);
 });
 
-// Start server function
+// Start server function (Only runs locally or in non-serverless environments)
 async function startServer() {
   try {
-    // Connect to MongoDB first
+    // Connect to MongoDB
     await connectDB();
 
     // Initialize Vehicle Tracking Service
@@ -130,5 +142,10 @@ async function startServer() {
   }
 }
 
-// Start the server
-startServer();
+// Export app for Vercel deployment
+export default app;
+
+// Only start the server if NOT running in Vercel (Vercel handles the server start)
+if (!process.env.VERCEL) {
+  startServer();
+}
