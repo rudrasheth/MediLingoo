@@ -14,29 +14,29 @@ interface ScanResult {
 // Helper function to parse medicines from OCR text
 function parseMedicines(text: string) {
   const medicines: { name: string; dosage: string; timing: string }[] = [];
-  
+
   // Common medicine patterns
   const lines = text.split('\n').filter(line => line.trim());
-  
+
   for (const line of lines) {
     // Look for patterns like "Medicine 500mg" or "Tab Medicine"
     const medicineMatch = line.match(/(?:Tab\.|Syp\.|Cap\.?)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*(\d+\s*(?:mg|ml|g)?)/i);
-    
+
     if (medicineMatch) {
       const name = medicineMatch[1].trim();
       const dosage = medicineMatch[2].trim();
-      
+
       // Try to extract timing
       let timing = 'As directed';
       if (/morning|breakfast/i.test(line)) timing = 'Morning';
       else if (/afternoon|lunch/i.test(line)) timing = 'Afternoon';
       else if (/evening|dinner|night/i.test(line)) timing = 'Night';
       else if (/\b[0-9]-[0-9]-[0-9]\b/.test(line)) timing = 'As per schedule';
-      
+
       medicines.push({ name, dosage, timing });
     }
   }
-  
+
   return medicines.length > 0 ? medicines : undefined;
 }
 
@@ -63,11 +63,14 @@ export const useAiScan = () => {
   // Primary method: Use Gemini API for OCR (vision model)
   const scanWithGemini = async (file: File): Promise<string | null> => {
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      console.log('🔑 API Key check:', apiKey ? `Present (${apiKey.substring(0, 10)}...)` : 'NOT FOUND');
+      // DIRECT DEBUG: Check multiple sources for the key
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyAFrIuyH_DfrWkiHg-4Ht3chR3I2Kj4KBU";
+
+      console.log('🔑 Debug - API Key Available:', !!apiKey);
+      console.log('🔑 Debug - Key Length:', apiKey?.length);
 
       if (!apiKey) {
-        console.warn('⚠️ Gemini API key not configured, falling back to Tesseract');
+        console.warn('⚠️ Gemini API key missing, falling back to Tesseract');
         return null;
       }
 
@@ -105,10 +108,10 @@ export const useAiScan = () => {
       setProgress(90);
       const response = await result.response;
       let extractedText = response.text().trim();
-      
+
       // Remove all asterisks (*) from the output
       extractedText = extractedText.replace(/\*/g, '');
-      
+
       console.log('📄 Extracted text length:', extractedText.length, 'characters');
 
       if (!extractedText || extractedText.length < 5) {
@@ -151,7 +154,7 @@ export const useAiScan = () => {
     );
 
     const extractedText = result.data.text.trim();
-    
+
     if (!extractedText || extractedText.length < 5) {
       throw new Error('No text detected in the image. Please upload a clearer prescription image.');
     }
@@ -159,7 +162,7 @@ export const useAiScan = () => {
     console.log('✅ Tesseract OCR successful:', extractedText.substring(0, 100));
     const confidence = result.data.confidence;
     console.log('Tesseract Confidence:', confidence);
-    
+
     return extractedText;
   };
 
@@ -167,7 +170,7 @@ export const useAiScan = () => {
     setLoading(true);
     setError(null);
     setProgress(0);
-    
+
     try {
       // Validate file type
       if (!file.type.startsWith('image/')) {
@@ -177,7 +180,7 @@ export const useAiScan = () => {
       // Step 1: Try Gemini API first (primary method for higher accuracy)
       console.log('📸 Starting prescription scan with Gemini AI...');
       const geminiResult = await scanWithGemini(file);
-      
+
       if (geminiResult) {
         // Gemini successful
         const medicines = parseMedicines(geminiResult);
@@ -188,10 +191,10 @@ export const useAiScan = () => {
       // Step 2: Fallback to Tesseract if Gemini fails or unavailable
       console.log('🔄 Gemini unavailable, using Tesseract fallback...');
       const tesseractResult = await scanWithTesseract(file);
-      
+
       const medicines = parseMedicines(tesseractResult);
       console.log('Parsed medicines:', medicines);
-      
+
       return tesseractResult;
     } catch (e: any) {
       console.error('OCR Error:', e);

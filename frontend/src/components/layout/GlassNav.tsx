@@ -38,7 +38,7 @@ const GlassNav = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSignupMode, setIsSignupMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Forgot password states
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [forgotPasswordStep, setForgotPasswordStep] = useState<"email" | "otp" | "reset">("email");
@@ -65,23 +65,23 @@ const GlassNav = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!firstName.trim() || !lastName.trim()) {
       alert("Please enter your full name");
       return;
     }
-    
+
     if (!age || parseInt(age) < 1 || parseInt(age) > 150) {
       alert("Please enter a valid age (1-150)");
       return;
     }
-    
+
     if (password !== confirmPassword) {
       alert("Passwords don't match!");
       return;
     }
-    
+
     if (password.length < 6) {
       alert("Password must be at least 6 characters");
       return;
@@ -127,7 +127,7 @@ const GlassNav = () => {
 
   const handleForgotPasswordRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!forgotPasswordEmail.trim()) {
       alert("Please enter your email address");
       return;
@@ -207,8 +207,8 @@ const GlassNav = () => {
 
   const handlePayment = async (target: "premium" | "pro") => {
     setProcessingPayment(true);
-    
-    // DEMO MODE - Simulate payment without Razorpay
+
+    // DEMO MODE CHECK (Disable for live)
     if (DEMO_MODE) {
       setTimeout(() => {
         setPlan(target);
@@ -219,46 +219,74 @@ const GlassNav = () => {
       return;
     }
 
-    // ⚠️ TODO: MOVE TO BACKEND ON DEPLOYMENT
-    // Security: This payment logic should be moved to backend server for production:
-    // 1. Backend creates Razorpay order (POST /api/payment/create-order)
-    // 2. Frontend calls checkout with order ID only
-    // 3. Backend verifies signature with secret key (NEVER expose in frontend code)
-    // 4. Backend updates database with new plan
-    // Currently in frontend for development only - move to server/routes before deploying!
-    
-    // PRODUCTION MODE - Real Razorpay payment
     try {
       const amount = target === "premium" ? 299 : 599;
-      
-      // Get Razorpay key from environment or use fallback
-      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_RtYUA2drSIhQYW";
-      
-      // Load Razorpay script
+      const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5001';
+
+      // 1. Create Order on Backend
+      console.log('Creating order on backend...');
+      const orderRes = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, planType: target })
+      });
+
+      const orderData = await orderRes.json();
+
+      if (!orderData.success) {
+        throw new Error(orderData.message || 'Failed to create order on server');
+      }
+
+      const { orderId, keyId } = orderData;
+      console.log('Order created:', orderId);
+
+      // 2. Load Razorpay script
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.async = true;
+
       script.onload = () => {
         const options = {
-          key: razorpayKey, // Use environment variable
-          amount: amount * 100, // Amount in paise
+          key: keyId, // Use key from backend
+          amount: orderData.amount * 100,
           currency: "INR",
           name: "MediLingo",
           description: `${target === "premium" ? "Premium" : "Pro"} Plan Subscription`,
           image: "/medilingo-logo.png",
-          handler: function (response: any) {
-            // Payment successful
-            console.log("Payment successful:", response);
-            setPlan(target);
-            setUpgradeOpen(false);
-            alert(`Successfully upgraded to ${target.charAt(0).toUpperCase() + target.slice(1)}!`);
+          order_id: orderId, // Critical for signature verification
+          handler: async function (response: any) {
+            console.log("Payment successful, verifying...", response);
+
+            // 3. Verify Payment on Backend
+            try {
+              const verifyRes = await fetch(`${API_BASE_URL}/api/payment/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  paymentResponse: response,
+                  userId: localStorage.getItem('medilingo_user_id') || 'guest' // Send user ID
+                })
+              });
+              const verifyData = await verifyRes.json();
+
+              if (verifyData.success) {
+                setPlan(target);
+                setUpgradeOpen(false);
+                alert(`✅ Payment Verified! Upgraded to ${target.toUpperCase()}.`);
+              } else {
+                alert('Payment verification failed: ' + verifyData.message);
+              }
+            } catch (vErr) {
+              console.error('Verification error', vErr);
+              alert('Payment successful but verification failed. Please contact support.');
+            }
           },
           prefill: {
             email: email || "",
             name: firstName ? `${firstName} ${lastName}` : "",
           },
           theme: {
-            color: "#16a34a", // Green color matching login theme
+            color: "#16a34a",
           },
           modal: {
             ondismiss: function () {
@@ -266,18 +294,25 @@ const GlassNav = () => {
             },
           },
         };
+
         const rzp = new (window as any).Razorpay(options);
+
+        // Close the upgrade dialog immediately to prevent focus trap issues
+        setUpgradeOpen(false);
+
         rzp.open();
         setProcessingPayment(false);
       };
+
       script.onerror = () => {
         setProcessingPayment(false);
         alert("Payment gateway unavailable. Please try again.");
       };
+
       document.body.appendChild(script);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment error:", error);
-      alert("Payment failed. Please try again.");
+      alert(`Payment initialization failed: ${error.message}`);
       setProcessingPayment(false);
     }
   };
@@ -652,8 +687,8 @@ const GlassNav = () => {
                       Current Plan
                     </Button>
                   ) : (
-                    <Button 
-                      onClick={() => handlePayment("premium")} 
+                    <Button
+                      onClick={() => handlePayment("premium")}
                       disabled={processingPayment}
                       className="w-full py-3 bg-green-600 hover:bg-green-800 text-white text-sm font-semibold transition-colors"
                     >
@@ -682,10 +717,10 @@ const GlassNav = () => {
                       Current Plan
                     </Button>
                   ) : (
-                    <Button 
-                      onClick={() => handlePayment("pro")} 
+                    <Button
+                      onClick={() => handlePayment("pro")}
                       disabled={processingPayment}
-                      variant="outline" 
+                      variant="outline"
                       className="w-full py-3 border-2 border-green-600 text-green-600 hover:bg-green-700 hover:text-white hover:border-green-700 text-sm font-semibold transition-colors"
                     >
                       {processingPayment ? "Processing..." : "Upgrade to Pro"}

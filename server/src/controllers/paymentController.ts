@@ -76,6 +76,12 @@ export const verifyPayment = async (req: PaymentRequest, res: Response): Promise
 /**
  * Create Razorpay order
  */
+import Razorpay from 'razorpay';
+import { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } from '../config/env';
+
+/**
+ * Create Razorpay order
+ */
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
   try {
     const { amount, planType } = req.body;
@@ -88,22 +94,45 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // In production, you should use Razorpay SDK to create orders
-    // For now, return a placeholder order ID
-    const orderId = `order_${Date.now()}`;
+    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      console.error('Razorpay keys missing in environment');
+      res.status(500).json({
+        success: false,
+        message: 'Payment configuration missing on server',
+      });
+      return;
+    }
+
+    const instance = new Razorpay({
+      key_id: RAZORPAY_KEY_ID,
+      key_secret: RAZORPAY_KEY_SECRET,
+    });
+
+    const options = {
+      amount: amount * 100, // amount in the smallest currency unit (paise)
+      currency: "INR",
+      receipt: "receipt_" + Date.now(),
+      notes: {
+        planType: planType
+      }
+    };
+
+    const order = await instance.orders.create(options);
 
     res.status(200).json({
       success: true,
-      orderId,
+      orderId: order.id,
       amount,
       currency: 'INR',
       planType,
+      keyId: RAZORPAY_KEY_ID // Send key to frontend to ensure match
     });
   } catch (error) {
     console.error('Order creation error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create order',
+      error: (error as any).message
     });
   }
 };

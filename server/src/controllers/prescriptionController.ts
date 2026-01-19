@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { GoogleGenerativeAI, SchemaType, TaskType } from '@google/generative-ai';
-import { GEMINI_API_KEY, GEMINI_MODEL } from '../config/env';
+import { GOOGLE_PRESCRIPTION_KEY, GEMINI_MODEL } from '../config/env';
 import { Prescription } from '../models/Prescription';
 import { MedicalHistory } from '../models/MedicalHistory';
 
-// Use the stable model identifier
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY!);
+// Use the dedicated Google Key for Prescription Processing
+const genAI = new GoogleGenerativeAI(GOOGLE_PRESCRIPTION_KEY!);
 
 const candidateModels = [
   GEMINI_MODEL,
@@ -87,7 +87,7 @@ export const processPrescription = async (req: Request, res: Response) => {
     if (!aiText) {
       throw lastError || new Error('No available Gemini model for prescription processing.');
     }
-    
+
     // 3. Parse Data
     const parsedData = JSON.parse(aiText);
 
@@ -119,14 +119,14 @@ export const processPrescription = async (req: Request, res: Response) => {
       { userId },
       {
         $addToSet: { chronicConditions: { $each: parsedData.detectedConditions } },
-        $push: { 
-          activeMedications: { 
+        $push: {
+          activeMedications: {
             $each: parsedData.medications.map((m: any) => ({
               name: m.name,
               prescriptionId: newPrescription._id,
               prescribedDate: new Date()
             }))
-          } 
+          }
         },
         $set: { lastUpdated: new Date() }
       },
@@ -137,10 +137,10 @@ export const processPrescription = async (req: Request, res: Response) => {
 
   } catch (error: any) {
     console.error("Critical Error:", error.message);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Processing failed. Check API Key or Model access.",
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -167,18 +167,18 @@ export const saveRawPrescription = async (req: Request, res: Response): Promise<
     // Parse basic medicine info from OCR text with improved extraction
     const medicines: any[] = [];
     const seenMedicines = new Set<string>(); // Avoid duplicates
-    
+
     // Method 1: Look for patterns with dosages (most reliable)
     const dosagePattern = /([A-Za-z\s]+?)\s+(\d+(?:\.\d+)?)\s*(mg|ml|g|units|IU)\b/gi;
     let dosageMatch;
     while ((dosageMatch = dosagePattern.exec(rawOcrText)) !== null) {
       const medicineName = dosageMatch[1].trim();
       const dosage = `${dosageMatch[2]} ${dosageMatch[3]}`;
-      
+
       // Filter out common non-medicine words
-      if (medicineName.length > 2 && medicineName.length < 100 && 
-          !medicineName.match(/^(for|take|after|before|meals|daily|twice|thrice|times|and|or|Type|Diabetes|meal|day|hours)$/i) &&
-          !seenMedicines.has(medicineName.toLowerCase())) {
+      if (medicineName.length > 2 && medicineName.length < 100 &&
+        !medicineName.match(/^(for|take|after|before|meals|daily|twice|thrice|times|and|or|Type|Diabetes|meal|day|hours)$/i) &&
+        !seenMedicines.has(medicineName.toLowerCase())) {
         medicines.push({
           name: medicineName,
           dosage: dosage,
@@ -188,15 +188,15 @@ export const saveRawPrescription = async (req: Request, res: Response): Promise<
         seenMedicines.add(medicineName.toLowerCase());
       }
     }
-    
+
     // Method 2: Look for medicine names followed by common patterns (Tab., Syp., Cap., etc.)
     const commonMedicinePattern = /(?:Tab\.|Syp\.|Cap\.|Inj\.|drops|liquid)?\s*([A-Za-z][A-Za-z\s]+?)\s*(?:\d+\s*(?:mg|ml|g)?)?(?:\s*(?:BD|OD|TDS|QID|once|twice|thrice)|$)/gi;
     let commonMatch;
     while ((commonMatch = commonMedicinePattern.exec(rawOcrText)) !== null) {
       const medicineName = commonMatch[1].trim();
-      if (medicineName.length > 2 && medicineName.length < 100 && 
-          !medicineName.match(/^(for|take|after|before|meals|daily|twice|thrice|times|Type|Diabetes)$/i) &&
-          !seenMedicines.has(medicineName.toLowerCase())) {
+      if (medicineName.length > 2 && medicineName.length < 100 &&
+        !medicineName.match(/^(for|take|after|before|meals|daily|twice|thrice|times|Type|Diabetes)$/i) &&
+        !seenMedicines.has(medicineName.toLowerCase())) {
         medicines.push({
           name: medicineName,
           dosage: 'As prescribed',
@@ -206,7 +206,7 @@ export const saveRawPrescription = async (req: Request, res: Response): Promise<
         seenMedicines.add(medicineName.toLowerCase());
       }
     }
-    
+
     // Method 3: If still no medicines found, try to extract capitalized words (last resort)
     if (medicines.length === 0) {
       const capitalizedPattern = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b/g;
@@ -215,8 +215,8 @@ export const saveRawPrescription = async (req: Request, res: Response): Promise<
         const word = capMatch[1];
         // Skip common English words and medical terms that aren't medicines
         if (word.length > 2 && word.length < 100 &&
-            !word.match(/^(Dr|Rx|Type|Diabetes|Dosage|Frequency|Take|Twice|Daily|After|Meals|Instructions)$/i) &&
-            !seenMedicines.has(word.toLowerCase())) {
+          !word.match(/^(Dr|Rx|Type|Diabetes|Dosage|Frequency|Take|Twice|Daily|After|Meals|Instructions)$/i) &&
+          !seenMedicines.has(word.toLowerCase())) {
           medicines.push({
             name: word,
             dosage: 'As prescribed',
@@ -227,7 +227,7 @@ export const saveRawPrescription = async (req: Request, res: Response): Promise<
         }
       }
     }
-    
+
     console.log(`🔍 Extracted ${medicines.length} medicines from OCR:`, medicines.map((m: any) => m.name));
 
     // Save prescription

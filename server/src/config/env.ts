@@ -28,6 +28,9 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 // Optional OpenAI key for TTS
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+// Independent Google Key for Prescription Processing (separated from Chatbot key)
+const GOOGLE_PRESCRIPTION_KEY = process.env.GOOGLE_PRESCRIPTION_KEY;
+
 // Allow overriding Gemini model; default to gemini-2.5-flash since you have access
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
@@ -75,8 +78,8 @@ if (!MONGODB_URI) {
   console.warn('⚠️  MONGODB_URI not set. Using default connection from db.ts');
 }
 
-export { 
-  GEMINI_API_KEY, 
+export {
+  GEMINI_API_KEY,
   GEMINI_MODEL,
   OPENAI_API_KEY,
   SESSION_SECRET,
@@ -89,5 +92,6 @@ export {
   PORT,
   FRONTEND_URL,
   RAZORPAY_KEY_ID,
-  RAZORPAY_KEY_SECRET
+  RAZORPAY_KEY_SECRET,
+  GOOGLE_PRESCRIPTION_KEY
 };
