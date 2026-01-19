@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { API_BASE_URL } from "@/lib/config";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -221,7 +222,7 @@ const GlassNav = () => {
 
     try {
       const amount = target === "premium" ? 299 : 599;
-      const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5001';
+
 
       // 1. Create Order on Backend
       console.log('Creating order on backend...');

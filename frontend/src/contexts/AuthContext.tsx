@@ -20,7 +20,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+import { API_BASE_URL } from '@/lib/config';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const data = await response.json();
       console.log('✅ Login successful:', data.user);
-      
+
       const userData: User = {
         id: data.user.id,
         name: data.user.name,
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         age: data.user.age,
         gender: data.user.gender,
       };
-      
+
       setUser(userData);
       toast({
         title: 'Login successful',
@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const data = await response.json();
       console.log('✅ Signup successful:', data.user);
-      
+
       const userData: User = {
         id: data.user.id,
         name: data.user.name,
@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         age: data.user.age,
         gender: data.user.gender,
       };
-      
+
       setUser(userData);
       toast({
         title: 'Account created successfully',

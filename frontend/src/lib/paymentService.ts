@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '@/lib/config';
+
 interface PaymentOptions {
   amount: number;
   email?: string;
@@ -81,7 +83,7 @@ export const paymentService = {
     userId: string
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      const response = await fetch('http://localhost:5001/api/payment/verify', {
+      const response = await fetch(`${API_BASE_URL}/api/payment/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

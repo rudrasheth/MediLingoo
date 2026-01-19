@@ -1,9 +1,9 @@
 // API Configuration
 const isDevelopment = import.meta.env.DEV;
 
-export const API_BASE_URL = isDevelopment 
+export const API_BASE_URL = isDevelopment
   ? 'http://localhost:5001'
-  : import.meta.env.VITE_API_URL || 'https://server-kappa-blush.vercel.app';
+  : (import.meta.env.VITE_API_URL || '');
 
 export const FRONTEND_URL = isDevelopment
   ? 'http://localhost:5173'

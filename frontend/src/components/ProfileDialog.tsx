@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { API_BASE_URL } from "@/lib/config";
 
 interface UserProfile {
   name: string;
@@ -60,22 +61,21 @@ const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
     const refreshProfile = async () => {
       if (!isAuthenticated || !open) return;
       try {
-        const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001";
         console.log("📱 Fetching profile from:", `${API_BASE_URL}/api/auth/profile`);
-        
+
         const resp = await fetch(`${API_BASE_URL}/api/auth/profile`, {
           method: "GET",
           credentials: "include",
         });
-        
+
         if (!resp.ok) {
           const errorData = await resp.json();
           throw new Error(errorData.message || `Failed to fetch profile (${resp.status})`);
         }
-        
+
         const data = await resp.json();
         console.log("✅ Profile data received:", data);
-        
+
         const u = data?.user || user;
         setProfile({
           name: u?.name || "",
@@ -87,7 +87,7 @@ const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
           email: u?.email || "",
           age: u?.age ? String(u.age) : "",
         });
-        
+
         // Load sharing code only for female users
         if (user?.gender === 'Female') {
           try {
@@ -96,7 +96,7 @@ const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
               method: 'GET',
               credentials: 'include',
             });
-            
+
             if (codeResp.ok) {
               const codeData = await codeResp.json();
               console.log("✅ Sharing code received:", codeData);
@@ -153,7 +153,7 @@ const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
 
     setIsSaving(true);
     try {
-      const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001";
+
       const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         method: "PUT",
         headers: {
@@ -196,9 +196,8 @@ const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
 
   const handleRegenerateCode = async () => {
     try {
-      const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001";
       console.log("🔄 Regenerating sharing code...");
-      
+
       const response = await fetch(`${API_BASE_URL}/api/share/regenerate-code`, {
         method: 'POST',
         credentials: 'include',
@@ -211,7 +210,7 @@ const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
 
       const data = await response.json();
       console.log("✅ New sharing code generated:", data.sharingCode);
-      
+
       setSharingCode(data.sharingCode);
       toast({
         title: "Success",
@@ -257,7 +256,7 @@ const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
 
     setIsSaving(true);
     try {
-      const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:5001";
+
       const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
         method: "POST",
         headers: {
