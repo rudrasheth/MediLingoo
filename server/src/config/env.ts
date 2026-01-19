@@ -34,14 +34,6 @@ const GOOGLE_PRESCRIPTION_KEY = process.env.GOOGLE_PRESCRIPTION_KEY;
 // Allow overriding Gemini model; default to gemini-2.5-flash since you have access
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
-if (!GEMINI_API_KEY) {
-  throw new Error('GEMINI_API_KEY (or GOOGLE_API_KEY) is not set in environment variables.');
-}
-
-if (!/^AIza/.test(GEMINI_API_KEY)) {
-  console.warn('GEMINI_API_KEY does not look like a Google AI key (expected to start with AIza...).');
-}
-
 // Authentication & Session Configuration
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -66,23 +58,29 @@ const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
 // Validation
+if (!GEMINI_API_KEY) {
+  console.warn('⚠️ GEMINI_API_KEY is not set. Chat features will not work.');
+}
+
 if (!SESSION_SECRET) {
-  throw new Error('SESSION_SECRET is not set in environment variables.');
+  console.warn('⚠️ SESSION_SECRET is not set. Using a temporary secret (sessions will be invalid on restart).');
 }
 
 if (!EMAIL_USER || !EMAIL_PASS) {
-  console.warn('⚠️  EMAIL_USER or EMAIL_PASS not set. Password reset functionality will not work.');
+  console.warn('⚠️ EMAIL_USER or EMAIL_PASS not set. Password reset functionality will not work.');
 }
 
 if (!MONGODB_URI) {
-  console.warn('⚠️  MONGODB_URI not set. Using default connection from db.ts');
+  console.warn('⚠️ MONGODB_URI not set. Application will fail to connect to database.');
 }
+
+const FINAL_SESSION_SECRET = SESSION_SECRET || 'temp_fallback_secret_' + Date.now();
 
 export {
   GEMINI_API_KEY,
   GEMINI_MODEL,
   OPENAI_API_KEY,
-  SESSION_SECRET,
+  FINAL_SESSION_SECRET as SESSION_SECRET,
   NODE_ENV,
   EMAIL_USER,
   EMAIL_PASS,
