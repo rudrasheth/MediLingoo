@@ -75,7 +75,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Middleware - Sessions
 app.use(session({
-  secret: SESSION_SECRET!,
+  secret: SESSION_SECRET || 'medilingo_default_secret_123',
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -133,14 +133,21 @@ async function startServer() {
     // Connect to MongoDB
     await connectDB();
 
-    // Initialize Vehicle Tracking Service
-    const trackingService = new TrackingService(io);
-    console.log('🚗 Vehicle tracking service initialized');
+    // Initialize Vehicle Tracking Service (Only if io is available)
+    if (io) {
+      const trackingService = new TrackingService(io);
+      console.log('🚗 Vehicle tracking service initialized');
 
-    // Add tracking stats endpoint
-    app.get('/api/tracking/stats', (req: Request, res: Response) => {
-      res.json(trackingService.getStats());
-    });
+      // Add tracking stats endpoint
+      app.get('/api/tracking/stats', (req: Request, res: Response) => {
+        res.json(trackingService.getStats());
+      });
+    } else {
+      console.warn('⚠️ Vehicle tracking service skipped (No Socket.io)');
+      app.get('/api/tracking/stats', (req: Request, res: Response) => {
+        res.json({ error: 'Tracking service unavailable' });
+      });
+    }
 
     // Start server
     const server = httpServer.listen(Number(PORT), '0.0.0.0', () => {

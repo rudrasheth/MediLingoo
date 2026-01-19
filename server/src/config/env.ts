@@ -6,20 +6,22 @@ import dotenv from 'dotenv';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Resolve .env reliably whether the server is started from repo root or /server
-const candidateEnvPaths = [
-  process.env.ENV_FILE && path.resolve(process.env.ENV_FILE),
-  path.resolve(process.cwd(), '.env'),
-  path.resolve(__dirname, '../../.env'),
-  path.resolve(__dirname, '../.env'),
-].filter(Boolean) as string[];
+// Only load .env manually if NOT on Vercel. Vercel automatically injects env variables.
+if (!process.env.VERCEL) {
+  const candidateEnvPaths = [
+    process.env.ENV_FILE && path.resolve(process.env.ENV_FILE),
+    path.resolve(process.cwd(), '.env'),
+    path.resolve(__dirname, '../../.env'),
+    path.resolve(__dirname, '../.env'),
+  ].filter(Boolean) as string[];
 
-const envPath = candidateEnvPaths.find((p) => fs.existsSync(p));
+  const envPath = candidateEnvPaths.find((p) => fs.existsSync(p));
 
-if (envPath) {
-  dotenv.config({ path: envPath });
-} else {
-  dotenv.config();
+  if (envPath) {
+    dotenv.config({ path: envPath });
+  } else {
+    dotenv.config();
+  }
 }
 
 // Accept either GEMINI_API_KEY or GOOGLE_API_KEY to avoid naming drift
