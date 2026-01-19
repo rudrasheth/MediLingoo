@@ -8,9 +8,9 @@ export default async function handler(req: any, res: any) {
     } catch (error: any) {
         console.error('CRITICAL API STARTUP ERROR:', error);
         res.status(500).json({
-            error: 'Server Startup Failed',
-            details: error.message,
-            stack: error.stack
+            success: false,
+            message: `Server Startup Failed: ${error.message}`,
+            details: error.message
         });
     }
 }
