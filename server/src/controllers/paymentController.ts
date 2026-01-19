@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { RAZORPAY_KEY_SECRET } from '../config/env';
+import { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } from '../config/env';
 import crypto from 'crypto';
 import { User } from '../models/User';
+import Razorpay from 'razorpay';
 
 interface PaymentRequest extends Request {
   body: {
@@ -76,8 +77,9 @@ export const verifyPayment = async (req: PaymentRequest, res: Response): Promise
 /**
  * Create Razorpay order
  */
-import Razorpay from 'razorpay';
-import { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } from '../config/env';
+/**
+ * Create Razorpay order
+ */
 
 /**
  * Create Razorpay order
