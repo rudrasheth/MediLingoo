@@ -1,0 +1,97 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Only load .env manually if NOT on Vercel. Vercel automatically injects env variables.
+if (!process.env.VERCEL) {
+  const candidateEnvPaths = [
+    process.env.ENV_FILE && path.resolve(process.env.ENV_FILE),
+    path.resolve(process.cwd(), '.env'),
+    path.resolve(__dirname, '../../.env'),
+    path.resolve(__dirname, '../.env'),
+  ].filter(Boolean) as string[];
+
+  const envPath = candidateEnvPaths.find((p) => fs.existsSync(p));
+
+  if (envPath) {
+    dotenv.config({ path: envPath });
+  } else {
+    dotenv.config();
+  }
+}
+
+// Accept either GEMINI_API_KEY or GOOGLE_API_KEY to avoid naming drift
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
+// Optional OpenAI key for TTS
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+// Independent Google Key for Prescription Processing (separated from Chatbot key)
+const GOOGLE_PRESCRIPTION_KEY = process.env.GOOGLE_PRESCRIPTION_KEY;
+
+// Allow overriding Gemini model; default to gemini-2.5-flash since you have access
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+// Authentication & Session Configuration
+const SESSION_SECRET = process.env.SESSION_SECRET;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Email Configuration for OTP
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
+const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || '587');
+
+// MongoDB URI
+const MONGODB_URI = process.env.MONGODB_URI;
+
+// Server Port
+const PORT = process.env.PORT || 5000;
+
+// Frontend URL for CORS
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+// Razorpay Configuration
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+
+// Validation
+if (!GEMINI_API_KEY) {
+  console.warn('⚠️ GEMINI_API_KEY is not set. Chat features will not work.');
+}
+
+if (!SESSION_SECRET) {
+  console.warn('⚠️ SESSION_SECRET is not set. Using a temporary secret (sessions will be invalid on restart).');
+}
+
+if (!EMAIL_USER || !EMAIL_PASS) {
+  console.warn('⚠️ EMAIL_USER or EMAIL_PASS not set. Password reset functionality will not work.');
+}
+
+if (!MONGODB_URI) {
+  console.warn('⚠️ MONGODB_URI not set. Application will fail to connect to database.');
+}
+
+const FINAL_SESSION_SECRET = SESSION_SECRET || 'temp_fallback_secret_' + Date.now();
+
+export {
+  GEMINI_API_KEY,
+  GEMINI_MODEL,
+  OPENAI_API_KEY,
+  FINAL_SESSION_SECRET as SESSION_SECRET,
+  NODE_ENV,
+  EMAIL_USER,
+  EMAIL_PASS,
+  EMAIL_HOST,
+  EMAIL_PORT,
+  MONGODB_URI,
+  PORT,
+  FRONTEND_URL,
+  RAZORPAY_KEY_ID,
+  RAZORPAY_KEY_SECRET,
+  GOOGLE_PRESCRIPTION_KEY
+};

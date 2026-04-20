@@ -1,0 +1,59 @@
+import { Camera, Upload, Image } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+interface PrescriptionUploadProps {
+  onCameraClick: () => void;
+  onUploadClick: () => void;
+}
+
+const PrescriptionUpload = ({ onCameraClick, onUploadClick }: PrescriptionUploadProps) => {
+  const { t } = useLanguage();
+  return (
+    <div className="text-center py-4 px-5 w-full relative">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2" style={{ lineHeight: '1.5' }}>
+        {t.hero.headline}
+      </h1>
+      <p className="max-w-2xl mx-auto text-gray-600 text-xs md:text-sm mb-5" style={{ lineHeight: '1.5' }}>
+        {t.hero.subtitle}
+      </p>
+
+      <div className="relative max-w-xl w-full mx-auto p-6 rounded-3xl border-2 border-gray-100 bg-gradient-to-br from-white to-gray-50/50">
+        {/* Icon circle */}
+        <div className="w-20 h-20 mx-auto bg-primary/20 rounded-full flex items-center justify-center mb-5 shadow-lg">
+          <Image className="w-10 h-10 text-primary" strokeWidth={2} />
+        </div>
+
+        <h3 className="text-2xl font-bold text-gray-900 mb-3" style={{ lineHeight: '1.5' }}>
+          {t.hero.dropOrScan}
+        </h3>
+        <p className="text-sm text-gray-600 mb-8 max-w-md mx-auto" style={{ lineHeight: '1.5' }}>
+          {t.hero.uploadExplain}
+        </p>
+
+        {/* Buttons */}
+        <div className="flex justify-center gap-4 flex-wrap">
+          <Button
+            onClick={onCameraClick}
+            variant="outline"
+            className="border-2 border-primary text-primary hover:bg-primary hover:text-white hover:border-primary px-8 py-6 rounded-xl font-semibold gap-2 text-base shadow-sm transition-all"
+          >
+            <Camera className="w-5 h-5" />
+            {t.hero.takePhotoBtn}
+          </Button>
+          <Button
+            onClick={onUploadClick}
+            variant="outline"
+            className="border-2 border-primary text-primary hover:bg-primary hover:text-white hover:border-primary px-8 py-6 rounded-xl font-semibold gap-2 text-base shadow-sm transition-all"
+          >
+            <Upload className="w-5 h-5" />
+            {t.hero.uploadFileBtn}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PrescriptionUpload;
+
