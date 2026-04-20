@@ -15,9 +15,9 @@ Go to: https://vercel.com/rudrasheth2201-8352s-projects/server/settings/environm
 
 Add ALL these:
 ```
-MONGODB_URI=mongodb+srv://tanvikamath22_db_user:DjQtbTtTC6X4zD8l@cluster0.xfabfim.mongodb.net/?appName=Cluster0
-GEMINI_API_KEY=AIzaSyCzypah6cThJviM4bt57h6703shfvWo5IM
-SESSION_SECRET=109feb3fa963eabfed71f4943311e961ac50b91e4ee4cc96aceabdfe39ede423
+MONGODB_URI=your_mongodb_connection_string_here
+GEMINI_API_KEY=your_gemini_api_key_here
+SESSION_SECRET=your_session_secret_here
 EMAIL_USER=stockmaster577@gmail.com
 EMAIL_PASS=obuauvyjlerywxke
 JWT_SECRET=17d567eb437e8912c223c9da505e50d743e3c19e570e51e51ba113e7d955369f

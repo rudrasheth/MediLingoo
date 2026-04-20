@@ -280,7 +280,7 @@ MongoNetworkError: connect ECONNREFUSED
 1. Check MONGODB_URI in .env is correct
 2. Test connection:
    ```bash
-   mongosh "mongodb+srv://user:pass@cluster.mongodb.net/?appName=Cluster0"
+   mongosh "mongodb+srv://username:password@cluster.mongodb.net/?appName=Cluster0"
    ```
 3. Whitelist your IP in MongoDB Atlas
 4. Check internet connection
