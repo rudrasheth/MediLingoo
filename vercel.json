@@ -4,6 +4,18 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
+      "source": "/api/auth/login",
+      "destination": "/api/auth/login.ts"
+    },
+    {
+      "source": "/api/auth/signup",
+      "destination": "/api/auth/signup.ts"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/health.ts"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index.ts"
     },
