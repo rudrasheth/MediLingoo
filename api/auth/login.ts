@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 // Database connection
 async function connectDB() {
@@ -24,7 +25,6 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.methods.comparePassword = async function(candidatePassword: string) {
-    const bcrypt = require('bcryptjs');
     return await bcrypt.compare(candidatePassword, this.password);
 };
 
