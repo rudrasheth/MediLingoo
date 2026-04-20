@@ -1,5 +1,34 @@
-import { connectDB } from '../../server/src/config/db';
-import { User } from '../../server/src/models/User';
+import mongoose from 'mongoose';
+
+// Database connection
+async function connectDB() {
+    if (mongoose.connection.readyState === 1) {
+        return;
+    }
+    
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) {
+        throw new Error('MONGODB_URI not set');
+    }
+    
+    await mongoose.connect(mongoUri);
+}
+
+// User model inline
+const userSchema = new mongoose.Schema({
+    name: String,
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    age: Number,
+    gender: String,
+});
+
+userSchema.methods.comparePassword = async function(candidatePassword: string) {
+    const bcrypt = require('bcryptjs');
+    return await bcrypt.compare(candidatePassword, this.password);
+};
+
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 export default async function handler(req: any, res: any) {
     // Set CORS headers
