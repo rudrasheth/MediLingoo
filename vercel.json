@@ -12,6 +12,14 @@
       "destination": "/api/auth/signup.ts"
     },
     {
+      "source": "/api/auth/forgot-password",
+      "destination": "/api/auth/forgot-password.ts"
+    },
+    {
+      "source": "/api/auth/reset-password",
+      "destination": "/api/auth/reset-password.ts"
+    },
+    {
       "source": "/api/health",
       "destination": "/api/health.ts"
     },
