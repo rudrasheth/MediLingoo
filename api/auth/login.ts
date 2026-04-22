@@ -31,27 +31,31 @@ userSchema.methods.comparePassword = async function(candidatePassword: string) {
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 export default async function handler(req: any, res: any) {
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.setHeader('Content-Type', 'application/json');
-
-    // Handle preflight
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    if (req.method !== 'POST') {
-        return res.status(405).json({
-            success: false,
-            message: 'Method not allowed'
-        });
-    }
-
     try {
+        // Set CORS headers
+        res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        res.setHeader('Content-Type', 'application/json');
+
+        // Handle preflight
+        if (req.method === 'OPTIONS') {
+            return res.status(200).end();
+        }
+
+        if (req.method !== 'POST') {
+            return res.status(405).json({
+                success: false,
+                message: 'Method not allowed'
+            });
+        }
+
         console.log('🔐 Login attempt started');
+        console.log('📝 Environment check:', {
+            hasMongoUri: !!process.env.MONGODB_URI,
+            nodeEnv: process.env.NODE_ENV
+        });
         
         // Connect to database
         await connectDB();
@@ -105,10 +109,15 @@ export default async function handler(req: any, res: any) {
         });
     } catch (error: any) {
         console.error('❌ Login error:', error);
+        console.error('❌ Error name:', error.name);
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Error stack:', error.stack);
+        
         return res.status(500).json({
             success: false,
             message: 'Error during login',
             error: error.message,
+            errorName: error.name,
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
