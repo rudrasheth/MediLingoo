@@ -5,8 +5,7 @@
   "functions": {
     "api/**/*.ts": {
       "memory": 1024,
-      "maxDuration": 10,
-      "includeFiles": "node_modules/**"
+      "maxDuration": 10
     }
   },
   "rewrites": [
