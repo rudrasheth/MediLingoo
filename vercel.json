@@ -2,31 +2,13 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
-    {
-      "source": "/api/auth/login",
-      "destination": "/api/auth/login.ts"
-    },
-    {
-      "source": "/api/auth/signup",
-      "destination": "/api/auth/signup.ts"
-    },
-    {
-      "source": "/api/auth/forgot-password",
-      "destination": "/api/auth/forgot-password.ts"
-    },
-    {
-      "source": "/api/auth/reset-password",
-      "destination": "/api/auth/reset-password.ts"
-    },
-    {
-      "source": "/api/health",
-      "destination": "/api/health.ts"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.ts"
-    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
