@@ -1,7 +1,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut, Crown, User } from "lucide-react";
+import { LogIn, LogOut, Crown, User, Activity } from "lucide-react";
 import {
   Dialog,
   DialogContent,
