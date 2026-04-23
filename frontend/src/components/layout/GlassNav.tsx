@@ -1,7 +1,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut, Crown, User, Activity } from "lucide-react";
+import { LogIn, LogOut, Crown, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -331,19 +331,6 @@ const GlassNav = () => {
 
         {/* Controls */}
         <div className="flex items-center gap-2">
-          {/* Health Twin Dashboard Link */}
-          {isAuthenticated && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.location.href = '/health-twin'}
-              className="gap-2"
-            >
-              <Activity className="w-4 h-4" />
-              Health Twin
-            </Button>
-          )}
-          
           {/* Language Switcher */}
           <LanguageSwitcher />
 
