@@ -1,7 +1,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut, Crown, User } from "lucide-react";
+import { LogIn, LogOut, Crown, User, Brain } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -331,6 +331,17 @@ const GlassNav = () => {
 
         {/* Controls */}
         <div className="flex items-center gap-2">
+          {/* Health Twin Demo Link */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open('https://health-twin-demo.netlify.app', '_blank')}
+            className="gap-2 border-purple-400 text-purple-700 hover:bg-purple-50"
+          >
+            <Brain className="w-4 h-4" />
+            Health Twin Demo
+          </Button>
+          
           {/* Language Switcher */}
           <LanguageSwitcher />
 
