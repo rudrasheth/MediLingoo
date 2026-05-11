@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Tesseract from 'tesseract.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { API_BASE_URL } from '@/lib/config';
 
 interface ScanResult {
   text: string;
@@ -66,8 +67,6 @@ export const useAiScan = () => {
       setProgress(10);
       console.log('🚀 Initializing Server-Side Scan...');
 
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-
       setProgress(30);
       // Convert image to base64
       console.log('🖼️ Converting image to base64...');
@@ -77,7 +76,7 @@ export const useAiScan = () => {
       setProgress(50);
       console.log('📝 Sending request to Backend API...');
 
-      const response = await fetch(`${API_URL}/api/prescriptions/scan`, {
+      const response = await fetch(`${API_BASE_URL}/api/prescriptions/scan`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

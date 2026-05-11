@@ -74,16 +74,16 @@ app.use(async (req, res, next) => {
     }
 });
 
-// Routes - Remove /api prefix since it's already in the URL
-app.use('/auth', authRoutes);
-app.use('/prescriptions', prescriptionRoutes);
-app.use('/payment', paymentRoutes);
-app.use('/voice', voiceRoutes);
-app.use('/chat', chatRoutes);
-app.use('/appointment', appointmentRoutes);
-app.use('/doctor', doctorRoutes);
-app.use('/share', shareRoutes);
-app.use('/cycle', cycleRoutes);
+// Routes - Handle /api prefix
+app.use('/api/auth', authRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/voice', voiceRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/appointment', appointmentRoutes);
+app.use('/api/doctor', doctorRoutes);
+app.use('/api/share', shareRoutes);
+app.use('/api/cycle', cycleRoutes);
 
 // Health Check
 app.get('/', (req, res) => {

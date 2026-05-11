@@ -3,7 +3,7 @@ const isDevelopment = import.meta.env.MODE === 'development';
 
 export const API_BASE_URL = isDevelopment
   ? 'http://localhost:5001'
-  : (import.meta.env.VITE_API_URL || '');
+  : '';
 
 console.log('🔌 API Base URL configured as:', API_BASE_URL || '(relative path)');
 

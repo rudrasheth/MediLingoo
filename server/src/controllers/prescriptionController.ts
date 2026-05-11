@@ -59,7 +59,7 @@ export const processPrescription = async (req: Request, res: Response) => {
     const { userId, rawOcrText, targetLanguage } = req.body;
 
     // 1. Define the Schema for structured output
-    const schema = {
+    const schema: any = {
       description: "Extracting structured medical data",
       type: SchemaType.OBJECT,
       properties: {
@@ -131,7 +131,7 @@ export const processPrescription = async (req: Request, res: Response) => {
       content: { role: "user", parts: [{ text: rawOcrText }] },
       taskType: TaskType.RETRIEVAL_DOCUMENT, // Optimized for storing in a DB
       outputDimensionality: 384, // Force 384 dims to match existing dataset/model expectations
-    });
+    } as any);
     const vector = embeddingResult.embedding.values;
     // -------------------------------
 
